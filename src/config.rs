@@ -1,6 +1,6 @@
 use serde::Deserialize;
 #[derive(Debug, Default, Deserialize)]
-pub struct ExampleConfig {
+pub struct AppConfig {
     pub server_addr: String,
-    pub pg: deadpool_postgres::Config,
+    pub database_url: String,
 }

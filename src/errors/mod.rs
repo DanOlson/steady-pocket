@@ -1,26 +1,43 @@
 use actix_web::{ResponseError, HttpResponse};
-use deadpool_postgres::PoolError;
-use derive_more::{Display, From};
-use tokio_pg_mapper::Error as PGMError;
-use tokio_postgres::error::Error as PGError;
+use thiserror::Error;
+use derive_more::Display;
 
-#[derive(Display, From, Debug)]
-pub enum MyError {
+#[derive(Error, Display, Debug)]
+pub enum Error {
     NotFound,
-    PGError(PGError),
-    PGMError(PGMError),
-    PoolError(PoolError),
+    DB(String),
+    Migration(#[from] sqlx::migrate::MigrateError),
+    IO(#[from] std::io::Error),
 }
-impl std::error::Error for MyError {}
 
-impl ResponseError for MyError {
+impl From<sqlx::Error> for Error {
+    fn from(error: sqlx::Error) -> Self {
+        match error {
+            sqlx::Error::RowNotFound => Error::NotFound,
+            _ => Error::DB(format!("Database error {error}"))
+        }
+    }
+}
+
+impl ResponseError for Error {
     fn error_response(&self) -> HttpResponse {
         match *self {
-            MyError::NotFound => HttpResponse::NotFound().finish(),
-            MyError::PoolError(ref err) => {
-                HttpResponse::InternalServerError().body(err.to_string())
+            Error::NotFound => HttpResponse::NotFound().finish(),
+            Error::DB(ref err) => {
+                let body = format!("Error::DB {err}");
+                println!("{body}");
+                HttpResponse::InternalServerError().body(body)
+            },
+            Error::IO(ref err) => {
+                let body = format!("Error::IO {err}");
+                println!("{body}");
+                HttpResponse::InternalServerError().body(body)
+            },
+            Error::Migration(ref err) => {
+                let body = format!("Error::Migration {err}");
+                println!("{body}");
+                HttpResponse::InternalServerError().body(body)
             }
-            _ => HttpResponse::InternalServerError().finish(),
         }
     }
 }

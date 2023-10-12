@@ -7,4 +7,4 @@ select id
       ,created_at
       ,updated_at
 from expenditures
-where expense_category_id in ($category_ids);
+where expense_category_id in (?);

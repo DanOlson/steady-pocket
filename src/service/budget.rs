@@ -1,21 +1,20 @@
 use crate::{
-    errors::MyError,
-    db,
+    prelude::*,
+    repository::Repository,
     models::{
         BudgetResponse,
         BudgetDTO,
     }
 };
-use deadpool_postgres::Client;
 
-pub async fn get_budget(client: &Client, budget_id: i32) -> Result<BudgetResponse, MyError> {
-    let budget = db::get_budget(client, budget_id).await?;
-    let categories = db::get_categories(client, budget_id).await?;
+pub async fn get_budget(repo: &dyn Repository, budget_id: i32) -> Result<BudgetResponse> {
+    let budget = repo.budget(budget_id).await?;
+    let categories = repo.expense_categories(budget_id).await?;
     let category_ids = categories
         .iter()
         .map(|cat| cat.id)
         .collect::<Vec<i32>>();
-    let expenditures = db::get_expenditures(client, &category_ids).await?;
+    let expenditures = repo.expenditures(&category_ids).await?;
     let dto = BudgetDTO {
         id: budget_id,
         name: budget.name,
