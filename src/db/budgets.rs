@@ -3,6 +3,7 @@ use crate::{
     db::Db,
     models::{
         Budget,
+        CreateBudget,
         ExpenseCategory,
         Expenditure
     }
@@ -35,6 +36,24 @@ impl Db {
                     id: row.get("id"),
                     name: row.get("name"),
                     interval_name: row.get("interval_name"),
+                }
+            })
+            .fetch_one(&self.0)
+            .await?;
+
+        Ok(budget)
+    }
+
+    pub async fn create_budget(&self, budget: CreateBudget) -> Result<Budget> {
+        let q = include_str!("sql/create_budget.sql");
+        let budget = sqlx::query(q)
+            .bind(budget.name)
+            .bind(budget.interval_name)
+            .map(|row: SqliteRow| {
+                Budget {
+                    id: row.get::<i32, &str>("id"),
+                    name: row.get("name"),
+                    interval_name: row.get("budget_interval")
                 }
             })
             .fetch_one(&self.0)

@@ -4,6 +4,7 @@ use super::{
     Repository,
     Db,
     Budget,
+    CreateBudget,
     ExpenseCategory,
     Expenditure
 };
@@ -27,6 +28,10 @@ impl Repository for DatabaseRepository {
 
     async fn budgets(&self) -> Result<Vec<Budget>> {
         self.db.get_budgets().await
+    }
+
+    async fn create_budget(&self, budget: CreateBudget) -> Result<Budget> {
+        self.db.create_budget(budget).await
     }
 
     async fn expense_category(&self, id: i32) -> Result<ExpenseCategory> {

@@ -4,6 +4,8 @@ use crate::{
     models::{
         BudgetResponse,
         BudgetDTO,
+        Budget,
+        CreateBudget
     }
 };
 
@@ -27,3 +29,6 @@ pub async fn get_budget(repo: &dyn Repository, budget_id: i32) -> Result<BudgetR
     })
 }
 
+pub async fn create_budget(repo: &dyn Repository, budget: CreateBudget) -> Result<Budget> {
+    repo.create_budget(budget).await
+}

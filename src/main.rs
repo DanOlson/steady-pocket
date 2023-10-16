@@ -18,10 +18,7 @@ use actix_web::{
     HttpServer
 };
 use dotenv::dotenv;
-use handlers::{
-    get_budgets,
-    get_budget
-};
+use handlers::*;
 use repository::*;
 
 #[actix_web::main]
@@ -45,6 +42,7 @@ async fn main() -> Result<()> {
                 scope("/api/v1")
                     .service(get_budgets)
                     .service(get_budget)
+                    .service(create_budget)
             )
     })
     .bind(config.server_addr.clone())?
