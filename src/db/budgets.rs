@@ -94,7 +94,7 @@ impl Db {
             .map(|row: SqliteRow| {
                 let expenditure_ids: Vec<i32> = row.get::<String, &str>("expenditure_ids")
                     .split(' ')
-                    .map(|n| n.parse::<i32>().unwrap())
+                    .filter_map(|n| n.parse::<i32>().ok())
                     .collect();
 
                 ExpenseCategory {
@@ -132,15 +132,17 @@ impl Db {
     }
 
     pub async fn get_expenditures(&self, category_ids: &[i32]) -> Result<Vec<Expenditure>> {
-        let q = include_str!("sql/get_expenditures.sql");
-        let sub = category_ids
+        let placeholders = category_ids
             .iter()
-            .map(|c| c.to_string())
-            .collect::<Vec<String>>()
+            .map(|_| "?")
+            .collect::<Vec<&str>>()
             .join(", ");
-
-        let expenditures = sqlx::query(q)
-            .bind(sub)
+        let q = format!(include_str!("sql/get_expenditures.sql"), placeholders);
+        let mut query = sqlx::query(&q);
+        for id in category_ids {
+            query = query.bind(id);
+        }
+        let expenditures = query
             .map(|row: SqliteRow| {
                 Expenditure {
                     id: row.get("id"),

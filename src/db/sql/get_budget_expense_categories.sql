@@ -2,8 +2,8 @@ select expense_categories.id
       ,expense_categories.name
       ,expense_categories.amount
       ,expense_categories.budget_id
-      ,total(expenditures.amount) as total_spend_to_date
-      ,group_concat(coalesce(expenditures.id, ''), '') as expenditure_ids
+      ,cast(total(expenditures.amount) as integer) as total_spend_to_date
+      ,group_concat(coalesce(expenditures.id, ''), ' ') as expenditure_ids
 from expense_categories
 left join expenditures
   on expenditures.expense_category_id = expense_categories.id
