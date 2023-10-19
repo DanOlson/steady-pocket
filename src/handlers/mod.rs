@@ -1,33 +1,45 @@
+use std::sync::Arc;
+use actix_web::web::{scope, Data, ServiceConfig};
+use crate::repository::Repository;
+
 mod budgets;
 pub use budgets::*;
 
+pub fn api_config(repo: impl Repository + 'static) -> impl FnOnce(&mut ServiceConfig) {
+    let repo_arc: Arc<dyn Repository> = Arc::new(repo);
+    let repo_data: Data<dyn Repository> = Data::from(repo_arc);
+    |cfg: &mut ServiceConfig| {
+        cfg.app_data(repo_data)
+        .service(
+    scope("/api/v1")
+                .service(get_budgets)
+                .service(get_budget)
+                .service(create_budget)
+        );
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use std::sync::Arc;
+    use super::api_config;
     use crate::{
-        repository::{
-            Repository,
-            DatabaseRepository
-        },
+        repository::DatabaseRepository,
         db::Db,
-        models::{CreateBudget, CreateBudgetDTO, Budget}
+        models::Budget
     };
-    use actix_web::{App, test, web::{scope, Data}, http::StatusCode};
+    use actix_web::{App, test, web::ServiceConfig};
+
+    // Setup the API config with an in-memory database
+    async fn test_config() -> impl FnOnce(&mut ServiceConfig) {
+        let db = Db::connect("sqlite://:memory:").await.unwrap();
+        let repo = DatabaseRepository::new(db);
+        api_config(repo)
+    }
 
     #[actix_web::test]
     async fn test_create_budget() {
-        let db = Db::connect("sqlite://:memory:").await.unwrap();
-        let repo = DatabaseRepository::new(db);
-        let repo_arc: Arc<dyn Repository> = Arc::new(repo.clone());
-        let repo_data: Data<dyn Repository> = Data::from(repo_arc);
         let app = test::init_service(
-            App::new()
-                .app_data(repo_data)
-                .service(
-                    scope("/api/v1")
-                        .service(create_budget)
-                )
+            App::new().configure(test_config().await)
         )
         .await;
         let body = r#"{
@@ -41,8 +53,6 @@ mod tests {
             .insert_header(("Content-Type", "application/json"))
             .set_payload(body)
             .to_request();
-        // let response = test::call_service(&app, req).await;
-        // assert_eq!(response.status(), StatusCode::CREATED);
         let resp: Budget = test::call_and_read_body_json(&app, req).await;
 
         assert!(resp.id > 0);

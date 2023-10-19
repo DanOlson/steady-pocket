@@ -9,14 +9,9 @@ mod repository;
 
 use crate::config::AppConfig;
 use crate::prelude::*;
-use std::sync::Arc;
 use db::Db;
 use ::config::Config;
-use actix_web::{
-    web::{Data, scope},
-    App,
-    HttpServer
-};
+use actix_web::{App, HttpServer};
 use dotenv::dotenv;
 use handlers::*;
 use repository::*;
@@ -34,16 +29,9 @@ async fn main() -> Result<()> {
     let db = Db::connect(&config.database_url).await?;
     let repo = DatabaseRepository::new(db);
     let server = HttpServer::new(move || {
-        let repo_arc: Arc<dyn Repository> = Arc::new(repo.clone());
-        let repo: Data<dyn Repository> = Data::from(repo_arc);
-        App::new()
-            .app_data(repo.clone())
-            .service(
-                scope("/api/v1")
-                    .service(get_budgets)
-                    .service(get_budget)
-                    .service(create_budget)
-            )
+        // TODO: this should be revisited - cloning the repo
+        // in the application factory doesn't seem right.
+        App::new().configure(api_config(repo.clone()))
     })
     .bind(config.server_addr.clone())?
     .run();
