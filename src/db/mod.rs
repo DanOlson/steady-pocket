@@ -5,6 +5,7 @@ use sqlx::{migrate::MigrateDatabase, Sqlite, SqlitePool};
 pub struct Db(SqlitePool);
 
 mod budgets;
+mod categories;
 
 impl Db {
     pub async fn connect(db_url: &str) -> Result<Self> {

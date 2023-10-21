@@ -18,7 +18,7 @@ pub struct CreateBudget {
     pub interval_name: String
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct ExpenseCategory {
     pub id: i32,
     pub name: String,
@@ -26,6 +26,18 @@ pub struct ExpenseCategory {
     pub budget_id: i32,
     pub total_spend_to_date: i64,
     pub expenditure_ids: Vec<i32>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct CreateExpenseCategoryDTO {
+    pub category: CreateExpenseCategory
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct CreateExpenseCategory {
+    pub name: String,
+    pub amount: i32,
+    pub budget_id: i32
 }
 
 #[derive(Deserialize, Serialize)]

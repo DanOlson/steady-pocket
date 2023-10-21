@@ -33,7 +33,7 @@ async fn main() -> Result<()> {
         // in the application factory doesn't seem right.
         App::new().configure(api_config(repo.clone()))
     })
-    .bind(config.server_addr.clone())?
+    .bind(&config.server_addr)?
     .run();
     println!("Server running at http://{}/", config.server_addr);
     server.await?;

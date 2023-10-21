@@ -6,6 +6,7 @@ use super::{
     Budget,
     CreateBudget,
     ExpenseCategory,
+    CreateExpenseCategory,
     Expenditure
 };
 
@@ -40,6 +41,10 @@ impl Repository for DatabaseRepository {
 
     async fn expense_categories(&self, budget_id: i32) -> Result<Vec<ExpenseCategory>> {
         self.db.get_categories(budget_id).await
+    }
+
+    async fn create_expense_category(&self, category: CreateExpenseCategory) -> Result<ExpenseCategory> {
+        self.db.create_category(category).await
     }
 
     async fn expenditure(&self, id: i32) -> Result<Expenditure> {
