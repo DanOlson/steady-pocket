@@ -4,6 +4,7 @@ use crate::{
     models::{
         Budget,
         CreateBudget,
+        UpdateBudget,
         ExpenseCategory,
         Expenditure
     }
@@ -60,6 +61,16 @@ impl Db {
             .await?;
 
         Ok(budget)
+    }
+
+    pub async fn update_budget(&self, budget_id: i32, budget: UpdateBudget) -> Result<()> {
+        let q = include_str!("sql/update_budget.sql");
+        sqlx::query(q)
+            .bind(budget.name)
+            .bind(budget_id)
+            .execute(&self.0)
+            .await?;
+        Ok(())
     }
 
     pub async fn get_category(&self, id: i32) -> Result<ExpenseCategory> {

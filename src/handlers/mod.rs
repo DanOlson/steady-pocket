@@ -17,6 +17,7 @@ pub fn api_config(repo: impl Repository + 'static) -> impl FnOnce(&mut ServiceCo
                 .service(get_budgets)
                 .service(get_budget)
                 .service(create_budget)
+                .service(update_budget)
                 .service(create_category)
         );
     }
@@ -32,7 +33,7 @@ mod tests {
         models::{Budget, ExpenseCategory, CreateBudget}
     };
     use std::future::Future;
-    use actix_web::{App, test, web::ServiceConfig};
+    use actix_web::{App, test, http::StatusCode, web::ServiceConfig};
 
     // Setup the API config with an in-memory database
     async fn test_config() -> impl FnOnce(&mut ServiceConfig) {
@@ -80,6 +81,34 @@ mod tests {
     }
 
     #[actix_web::test]
+    async fn test_update_budget() {
+        let config = test_config_with_setup(|db| async {
+            db.create_budget(CreateBudget {
+                name: "Initial Budget Name".to_string(),
+                interval_name: "monthly".to_string()
+            }).await?;
+            Ok(db)
+        }).await;
+        let app = test::init_service(
+            App::new().configure(config)
+        ).await;
+        let body = r#"{"budget":{"name":"Updated Budget Name"}}"#.as_bytes();
+        let req = test::TestRequest::patch()
+            .uri("/api/v1/budgets/1")
+            .insert_header(("Content-Type", "application/json"))
+            .set_payload(body)
+            .to_request();
+        let response = test::call_service(&app, req).await;
+        assert_eq!(response.status(), StatusCode::NO_CONTENT);
+        let location = response
+            .headers()
+            .get("Location")
+            .map(|v| v.to_str().unwrap())
+            .unwrap();
+        assert_eq!(location, "/api/v1/budgets/1");
+    }
+
+    #[actix_web::test]
     async fn test_create_category() {
         let config = test_config_with_setup(|db| async {
             db.create_budget(CreateBudget {
@@ -90,8 +119,7 @@ mod tests {
         }).await;
         let app = test::init_service(
             App::new().configure(config)
-        )
-        .await;
+        ).await;
         let body = r#"{
             "category": {
                 "name": "Housing",
@@ -104,8 +132,6 @@ mod tests {
             .insert_header(("Content-Type", "application/json"))
             .set_payload(body)
             .to_request();
-        // let resp = test::call_service(&app, req).await;
-        // assert_eq!(resp.status(), actix_web::http::StatusCode::CREATED);
         let resp: ExpenseCategory = test::call_and_read_body_json(&app, req).await;
         assert!(resp.id > 0);
         assert_eq!(resp.name, "Housing".to_string());

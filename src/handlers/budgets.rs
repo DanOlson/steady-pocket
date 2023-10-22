@@ -2,9 +2,9 @@ use crate::{
     prelude::*,
     service,
     repository::Repository,
-    models::CreateBudgetDTO
+    models::{CreateBudgetDTO, UpdateBudgetDTO}
 };
-use actix_web::{web, get, post, HttpResponse};
+use actix_web::{web, get, post, patch, HttpResponse};
 
 #[get("/budgets")]
 pub async fn get_budgets(repo: web::Data<dyn Repository>) -> Result<HttpResponse> {
@@ -37,5 +37,22 @@ pub async fn create_budget(
     let response = HttpResponse::Created()
         .insert_header(("Location", format!("/v1/budgets/{}", budget.id)))
         .json(budget);
+    Ok(response)
+}
+
+#[patch("/budgets/{budget_id}")]
+pub async fn update_budget(
+    repo: web::Data<dyn Repository>,
+    budget: web::Json<UpdateBudgetDTO>,
+    budget_id: web::Path<i32>
+) -> Result<HttpResponse> {
+    let budget = budget.into_inner().budget;
+    let repo = repo.into_inner();
+    let budget_id = budget_id.into_inner();
+    service::budget::update_budget(&*repo, budget_id, budget).await?;
+
+    let response = HttpResponse::NoContent()
+        .insert_header(("Location", format!("/api/v1/budgets/{budget_id}")))
+        .finish();
     Ok(response)
 }
