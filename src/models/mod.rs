@@ -44,6 +44,17 @@ pub struct CreateExpenseCategoryDTO {
 }
 
 #[derive(Serialize, Deserialize)]
+pub struct UpdateExpenseCategoryDTO {
+    pub category: UpdateExpenseCategory
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct UpdateExpenseCategory {
+    pub name: Option<String>,
+    pub amount: Option<i32>
+}
+
+#[derive(Serialize, Deserialize)]
 pub struct CreateExpenseCategory {
     pub name: String,
     pub amount: i32,

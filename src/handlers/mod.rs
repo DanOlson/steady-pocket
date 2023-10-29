@@ -19,6 +19,7 @@ pub fn api_config(repo: impl Repository + 'static) -> impl FnOnce(&mut ServiceCo
                 .service(create_budget)
                 .service(update_budget)
                 .service(create_category)
+                .service(update_category)
         );
     }
 }
@@ -30,7 +31,7 @@ mod tests {
         prelude::*,
         repository::{DatabaseRepository, Repository},
         db::Db,
-        models::{Budget, ExpenseCategory, CreateBudget}
+        models::{Budget, CreateBudget, ExpenseCategory, CreateExpenseCategory}
     };
     use std::future::Future;
     use actix_web::{App, test, http::StatusCode, web::ServiceConfig};
@@ -137,5 +138,86 @@ mod tests {
         assert_eq!(resp.name, "Housing".to_string());
         assert_eq!(resp.amount, 200000);
         assert_eq!(resp.total_spend_to_date, 0);
+    }
+
+    #[actix_web::test]
+    async fn test_update_category_name() {
+        let config = test_config_with_setup(|db| async {
+            let budget = db.create_budget(CreateBudget {
+                name: "Test Budget".to_string(),
+                interval_name: "monthly".to_string()
+            }).await.unwrap();
+            db.create_expense_category(CreateExpenseCategory {
+                name: "Mortgage".to_string(),
+                amount: 200000,
+                budget_id: budget.id
+            }).await.unwrap();
+            Ok(db)
+        }).await;
+        let app = test::init_service(
+            App::new().configure(config)
+        ).await;
+        let body = r#"{"category":{"name":"Mortgage Payment"}}"#.as_bytes();
+        let req = test::TestRequest::patch()
+            .uri("/api/v1/expense_categories/1")
+            .insert_header(("Content-Type", "application/json"))
+            .set_payload(body)
+            .to_request();
+        let response = test::call_service(&app, req).await;
+        assert_eq!(response.status(), StatusCode::NO_CONTENT);
+    }
+
+    #[actix_web::test]
+    async fn test_update_category_amount() {
+        let config = test_config_with_setup(|db| async {
+            let budget = db.create_budget(CreateBudget {
+                name: "Test Budget".to_string(),
+                interval_name: "monthly".to_string()
+            }).await.unwrap();
+            db.create_expense_category(CreateExpenseCategory {
+                name: "Mortgage".to_string(),
+                amount: 200000,
+                budget_id: budget.id
+            }).await.unwrap();
+            Ok(db)
+        }).await;
+        let app = test::init_service(
+            App::new().configure(config)
+        ).await;
+        let body = r#"{"category":{"amount":250000}}"#.as_bytes();
+        let req = test::TestRequest::patch()
+            .uri("/api/v1/expense_categories/1")
+            .insert_header(("Content-Type", "application/json"))
+            .set_payload(body)
+            .to_request();
+        let response = test::call_service(&app, req).await;
+        assert_eq!(response.status(), StatusCode::NO_CONTENT);
+    }
+
+    #[actix_web::test]
+    async fn test_update_category_name_and_amount() {
+        let config = test_config_with_setup(|db| async {
+            let budget = db.create_budget(CreateBudget {
+                name: "Test Budget".to_string(),
+                interval_name: "monthly".to_string()
+            }).await.unwrap();
+            db.create_expense_category(CreateExpenseCategory {
+                name: "Mortgage".to_string(),
+                amount: 200000,
+                budget_id: budget.id
+            }).await.unwrap();
+            Ok(db)
+        }).await;
+        let app = test::init_service(
+            App::new().configure(config)
+        ).await;
+        let body = r#"{"category":{"name":"Cabbage","amount":250000}}"#.as_bytes();
+        let req = test::TestRequest::patch()
+            .uri("/api/v1/expense_categories/1")
+            .insert_header(("Content-Type", "application/json"))
+            .set_payload(body)
+            .to_request();
+        let response = test::call_service(&app, req).await;
+        assert_eq!(response.status(), StatusCode::NO_CONTENT);
     }
 }
