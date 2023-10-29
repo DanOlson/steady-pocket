@@ -18,6 +18,7 @@ pub fn api_config(repo: impl Repository + 'static) -> impl FnOnce(&mut ServiceCo
                 .service(get_budget)
                 .service(create_budget)
                 .service(update_budget)
+                .service(get_category)
                 .service(create_category)
                 .service(update_category)
         );
@@ -219,5 +220,30 @@ mod tests {
             .to_request();
         let response = test::call_service(&app, req).await;
         assert_eq!(response.status(), StatusCode::NO_CONTENT);
+    }
+
+    #[actix_web::test]
+    async fn test_get_category() {
+        let config = test_config_with_setup(|db| async {
+            let budget = db.create_budget(CreateBudget {
+                name: "Test Budget".to_string(),
+                interval_name: "monthly".to_string()
+            }).await.unwrap();
+            db.create_expense_category(CreateExpenseCategory {
+                name: "Mortgage".to_string(),
+                amount: 200000,
+                budget_id: budget.id
+            }).await.unwrap();
+            Ok(db)
+        }).await;
+        let app = test::init_service(
+            App::new().configure(config)
+        ).await;
+        let req = test::TestRequest::get()
+            .uri("/api/v1/expense_categories/1")
+            .to_request();
+        let response: ExpenseCategory = test::call_and_read_body_json(&app, req).await;
+        assert_eq!(response.id, 1);
+        assert_eq!(response.name, "Mortgage".to_string());
     }
 }

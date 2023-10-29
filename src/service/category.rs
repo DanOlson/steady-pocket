@@ -8,6 +8,10 @@ use crate::{
     }
 };
 
+pub async fn get_category(repo: &dyn Repository, id: i32) -> Result<ExpenseCategory> {
+    repo.expense_category(id).await
+}
+
 pub async fn create_category(
     repo: &dyn Repository,
     create_category: CreateExpenseCategory

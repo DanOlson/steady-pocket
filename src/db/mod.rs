@@ -6,6 +6,7 @@ pub struct Db(SqlitePool);
 
 mod budgets;
 mod categories;
+mod expenditures;
 
 impl Db {
     pub async fn connect(db_url: &str) -> Result<Self> {
