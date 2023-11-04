@@ -56,3 +56,66 @@ pub async fn update_budget(
         .finish();
     Ok(response)
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::{
+        handlers::test_prelude::*,
+        models::{
+            Budget,
+            CreateBudget,
+        }
+    };
+
+    #[actix_web::test]
+    async fn test_create_budget() {
+        let app = test::init_service(
+            App::new().configure(test_config().await)
+        )
+        .await;
+        let body = r#"{
+            "budget": {
+                "name": "Simpson Family Budget",
+                "interval_name": "monthly"
+            }
+        }"#.as_bytes();
+        let req = test::TestRequest::post()
+            .uri("/api/v1/budgets")
+            .insert_header(("Content-Type", "application/json"))
+            .set_payload(body)
+            .to_request();
+        let resp: Budget = test::call_and_read_body_json(&app, req).await;
+
+        assert!(resp.id > 0);
+        assert_eq!(resp.name, "Simpson Family Budget".to_string());
+        assert_eq!(resp.interval_name, "monthly".to_string());
+    }
+
+    #[actix_web::test]
+    async fn test_update_budget() {
+        let config = test_config_with_setup(|db| async {
+            db.create_budget(CreateBudget {
+                name: "Initial Budget Name".to_string(),
+                interval_name: "monthly".to_string()
+            }).await?;
+            Ok(db)
+        }).await;
+        let app = test::init_service(
+            App::new().configure(config)
+        ).await;
+        let body = r#"{"budget":{"name":"Updated Budget Name"}}"#.as_bytes();
+        let req = test::TestRequest::patch()
+            .uri("/api/v1/budgets/1")
+            .insert_header(("Content-Type", "application/json"))
+            .set_payload(body)
+            .to_request();
+        let response = test::call_service(&app, req).await;
+        assert_eq!(response.status(), StatusCode::NO_CONTENT);
+        let location = response
+            .headers()
+            .get("Location")
+            .map(|v| v.to_str().unwrap())
+            .unwrap();
+        assert_eq!(location, "/api/v1/budgets/1");
+    }
+}

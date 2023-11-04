@@ -29,30 +29,23 @@ pub fn api_config(repo: impl Repository + 'static) -> impl FnOnce(&mut ServiceCo
 }
 
 #[cfg(test)]
-mod tests {
-    use super::api_config;
-    use crate::{
+pub mod test_prelude {
+    pub use super::api_config;
+    pub use crate::{
         prelude::*,
         repository::{DatabaseRepository, Repository},
         db::Db,
-        models::{
-            Budget,
-            CreateBudget,
-            ExpenseCategory,
-            CreateExpenseCategory,
-            Expenditure
-        }
     };
+    pub use actix_web::{App, test, http::StatusCode, web::ServiceConfig};
     use std::future::Future;
-    use actix_web::{App, test, http::StatusCode, web::ServiceConfig};
 
     // Setup the API config with an in-memory database
-    async fn test_config() -> impl FnOnce(&mut ServiceConfig) {
+    pub async fn test_config() -> impl FnOnce(&mut ServiceConfig) {
         let repo = init_repo().await.unwrap();
         api_config(repo)
     }
 
-    async fn test_config_with_setup<F, Fut>(f: F) -> impl FnOnce(&mut ServiceConfig)
+    pub async fn test_config_with_setup<F, Fut>(f: F) -> impl FnOnce(&mut ServiceConfig)
         where
             F: FnOnce(DatabaseRepository) -> Fut,
             Fut: Future<Output = Result<DatabaseRepository>>
@@ -62,268 +55,8 @@ mod tests {
         api_config(repo)
     }
 
-    async fn init_repo() -> Result<DatabaseRepository> {
+    pub async fn init_repo() -> Result<DatabaseRepository> {
         let db = Db::connect("sqlite://:memory:").await?;
         Ok(DatabaseRepository::new(db))
-    }
-
-    #[actix_web::test]
-    async fn test_create_budget() {
-        let app = test::init_service(
-            App::new().configure(test_config().await)
-        )
-        .await;
-        let body = r#"{
-            "budget": {
-                "name": "Simpson Family Budget",
-                "interval_name": "monthly"
-            }
-        }"#.as_bytes();
-        let req = test::TestRequest::post()
-            .uri("/api/v1/budgets")
-            .insert_header(("Content-Type", "application/json"))
-            .set_payload(body)
-            .to_request();
-        let resp: Budget = test::call_and_read_body_json(&app, req).await;
-
-        assert!(resp.id > 0);
-        assert_eq!(resp.name, "Simpson Family Budget".to_string());
-        assert_eq!(resp.interval_name, "monthly".to_string());
-    }
-
-    #[actix_web::test]
-    async fn test_update_budget() {
-        let config = test_config_with_setup(|db| async {
-            db.create_budget(CreateBudget {
-                name: "Initial Budget Name".to_string(),
-                interval_name: "monthly".to_string()
-            }).await?;
-            Ok(db)
-        }).await;
-        let app = test::init_service(
-            App::new().configure(config)
-        ).await;
-        let body = r#"{"budget":{"name":"Updated Budget Name"}}"#.as_bytes();
-        let req = test::TestRequest::patch()
-            .uri("/api/v1/budgets/1")
-            .insert_header(("Content-Type", "application/json"))
-            .set_payload(body)
-            .to_request();
-        let response = test::call_service(&app, req).await;
-        assert_eq!(response.status(), StatusCode::NO_CONTENT);
-        let location = response
-            .headers()
-            .get("Location")
-            .map(|v| v.to_str().unwrap())
-            .unwrap();
-        assert_eq!(location, "/api/v1/budgets/1");
-    }
-
-    #[actix_web::test]
-    async fn test_create_category() {
-        let config = test_config_with_setup(|db| async {
-            db.create_budget(CreateBudget {
-                name: "Test".to_string(),
-                interval_name: "monthly".to_string()
-            }).await?;
-            Ok(db)
-        }).await;
-        let app = test::init_service(
-            App::new().configure(config)
-        ).await;
-        let body = r#"{
-            "category": {
-                "name": "Housing",
-                "amount": 200000,
-                "budget_id": 1
-            }
-        }"#.as_bytes();
-        let req = test::TestRequest::post()
-            .uri("/api/v1/expense_categories")
-            .insert_header(("Content-Type", "application/json"))
-            .set_payload(body)
-            .to_request();
-        let resp: ExpenseCategory = test::call_and_read_body_json(&app, req).await;
-        assert!(resp.id > 0);
-        assert_eq!(resp.name, "Housing".to_string());
-        assert_eq!(resp.amount, 200000);
-        assert_eq!(resp.total_spend_to_date, 0);
-    }
-
-    #[actix_web::test]
-    async fn test_update_category_name() {
-        let config = test_config_with_setup(|db| async {
-            let budget = db.create_budget(CreateBudget {
-                name: "Test Budget".to_string(),
-                interval_name: "monthly".to_string()
-            }).await.unwrap();
-            db.create_expense_category(CreateExpenseCategory {
-                name: "Mortgage".to_string(),
-                amount: 200000,
-                budget_id: budget.id
-            }).await.unwrap();
-            Ok(db)
-        }).await;
-        let app = test::init_service(
-            App::new().configure(config)
-        ).await;
-        let body = r#"{"category":{"name":"Mortgage Payment"}}"#.as_bytes();
-        let req = test::TestRequest::patch()
-            .uri("/api/v1/expense_categories/1")
-            .insert_header(("Content-Type", "application/json"))
-            .set_payload(body)
-            .to_request();
-        let response = test::call_service(&app, req).await;
-        assert_eq!(response.status(), StatusCode::NO_CONTENT);
-    }
-
-    #[actix_web::test]
-    async fn test_update_category_amount() {
-        let config = test_config_with_setup(|db| async {
-            let budget = db.create_budget(CreateBudget {
-                name: "Test Budget".to_string(),
-                interval_name: "monthly".to_string()
-            }).await.unwrap();
-            db.create_expense_category(CreateExpenseCategory {
-                name: "Mortgage".to_string(),
-                amount: 200000,
-                budget_id: budget.id
-            }).await.unwrap();
-            Ok(db)
-        }).await;
-        let app = test::init_service(
-            App::new().configure(config)
-        ).await;
-        let body = r#"{"category":{"amount":250000}}"#.as_bytes();
-        let req = test::TestRequest::patch()
-            .uri("/api/v1/expense_categories/1")
-            .insert_header(("Content-Type", "application/json"))
-            .set_payload(body)
-            .to_request();
-        let response = test::call_service(&app, req).await;
-        assert_eq!(response.status(), StatusCode::NO_CONTENT);
-    }
-
-    #[actix_web::test]
-    async fn test_update_category_name_and_amount() {
-        let config = test_config_with_setup(|db| async {
-            let budget = db.create_budget(CreateBudget {
-                name: "Test Budget".to_string(),
-                interval_name: "monthly".to_string()
-            }).await.unwrap();
-            db.create_expense_category(CreateExpenseCategory {
-                name: "Mortgage".to_string(),
-                amount: 200000,
-                budget_id: budget.id
-            }).await.unwrap();
-            Ok(db)
-        }).await;
-        let app = test::init_service(
-            App::new().configure(config)
-        ).await;
-        let body = r#"{"category":{"name":"Cabbage","amount":250000}}"#.as_bytes();
-        let req = test::TestRequest::patch()
-            .uri("/api/v1/expense_categories/1")
-            .insert_header(("Content-Type", "application/json"))
-            .set_payload(body)
-            .to_request();
-        let response = test::call_service(&app, req).await;
-        assert_eq!(response.status(), StatusCode::NO_CONTENT);
-    }
-
-    #[actix_web::test]
-    async fn test_get_category() {
-        let config = test_config_with_setup(|db| async {
-            let budget = db.create_budget(CreateBudget {
-                name: "Test Budget".to_string(),
-                interval_name: "monthly".to_string()
-            }).await.unwrap();
-            db.create_expense_category(CreateExpenseCategory {
-                name: "Mortgage".to_string(),
-                amount: 200000,
-                budget_id: budget.id
-            }).await.unwrap();
-            Ok(db)
-        }).await;
-        let app = test::init_service(
-            App::new().configure(config)
-        ).await;
-        let req = test::TestRequest::get()
-            .uri("/api/v1/expense_categories/1")
-            .to_request();
-        let response: ExpenseCategory = test::call_and_read_body_json(&app, req).await;
-        assert_eq!(response.id, 1);
-        assert_eq!(response.name, "Mortgage".to_string());
-    }
-
-    #[actix_web::test]
-    async fn test_create_expenditure() {
-        let config = test_config_with_setup(|db| async {
-            let budget = db.create_budget(CreateBudget {
-                name: "Test Budget".to_string(),
-                interval_name: "monthly".to_string()
-            }).await.unwrap();
-            db.create_expense_category(CreateExpenseCategory {
-                name: "Groceries".to_string(),
-                amount: 50000,
-                budget_id: budget.id
-            }).await.unwrap();
-            Ok(db)
-        }).await;
-        let app = test::init_service(
-            App::new().configure(config)
-        ).await;
-        let body = r#"{
-            "expenditure": {
-                "amount": 12500,
-                "vendor": "Kroger",
-                "description": "groceries",
-                "expense_category_id": 1
-            }
-        }"#.as_bytes();
-        let req = test::TestRequest::post()
-            .uri("/api/v1/expenditures")
-            .set_payload(body)
-            .insert_header(("Content-Type", "application/json"))
-            .to_request();
-        let expenditure: Expenditure = test::call_and_read_body_json(&app, req).await;
-        assert!(expenditure.id > 0);
-        assert_eq!(expenditure.amount, 12500);
-        assert_eq!(expenditure.vendor, "Kroger".to_string());
-        assert_eq!(expenditure.description, "groceries".to_string());
-        assert_eq!(expenditure.category_id, 1);
-    }
-
-    #[actix_web::test]
-    async fn test_create_expenditure_bad_req() {
-        let config = test_config_with_setup(|db| async {
-            let budget = db.create_budget(CreateBudget {
-                name: "Test Budget".to_string(),
-                interval_name: "monthly".to_string()
-            }).await.unwrap();
-            db.create_expense_category(CreateExpenseCategory {
-                name: "Groceries".to_string(),
-                amount: 50000,
-                budget_id: budget.id
-            }).await.unwrap();
-            Ok(db)
-        }).await;
-        let app = test::init_service(
-            App::new().configure(config)
-        ).await;
-        let body = r#"{
-            "expenditure": {
-                "vendor": "Kroger",
-                "description": "groceries",
-                "expense_category_id": 1
-            }
-        }"#.as_bytes();
-        let req = test::TestRequest::post()
-            .uri("/api/v1/expenditures")
-            .set_payload(body)
-            .insert_header(("Content-Type", "application/json"))
-            .to_request();
-        let response = test::call_service(&app, req).await;
-        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     }
 }
