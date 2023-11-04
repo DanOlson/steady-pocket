@@ -84,3 +84,15 @@ pub struct BudgetResponse {
     pub expenditures: Vec<Expenditure>,
 }
 
+#[derive(Deserialize)]
+pub struct CreateExpenditureDTO {
+    pub expenditure: CreateExpenditure
+}
+
+#[derive(Deserialize)]
+pub struct CreateExpenditure {
+    pub amount: i32,
+    pub vendor: String,
+    pub description: String,
+    pub expense_category_id: i32,
+}

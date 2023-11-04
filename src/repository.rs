@@ -7,7 +7,8 @@ use crate::{
         ExpenseCategory,
         CreateExpenseCategory,
         UpdateExpenseCategory,
-        Expenditure
+        Expenditure,
+        CreateExpenditure
     },
     db::Db,
     prelude::*
@@ -31,4 +32,5 @@ pub trait Repository {
     async fn update_expense_category(&self, id: i32, category: UpdateExpenseCategory) -> Result<()>;
     async fn expenditure(&self, expenditure_id: i32) -> Result<Expenditure>;
     async fn expenditures(&self, category_ids: &[i32]) -> Result<Vec<Expenditure>>;
+    async fn create_expenditure(&self, expenditure: CreateExpenditure) -> Result<Expenditure>;
 }
