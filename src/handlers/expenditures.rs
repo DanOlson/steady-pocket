@@ -21,11 +21,22 @@ pub async fn get_expenditures(
     let query = query.into_inner();
 
     let expenditures = service::expenditure::for_category(&*repo, query.expense_category_id).await?;
-    let response = HttpResponse::Ok()
-        .json(expenditures);
+    let response = HttpResponse::Ok().json(expenditures);
     Ok(response)
 }
 
+#[get("/expenditures/{id}")]
+pub async fn get_expenditure(
+    repo: web::Data<dyn Repository>,
+    id: web::Path<i32>,
+) -> Result<HttpResponse> {
+    let repo = repo.into_inner();
+    let id = id.into_inner();
+
+    let expenditure = service::expenditure::find(&*repo, id).await?;
+    let response = HttpResponse::Ok().json(expenditure);
+    Ok(response)
+}
 
 #[post("/expenditures")]
 pub async fn create_expenditure(
@@ -136,6 +147,40 @@ mod tests {
             .to_request();
         let response = test::call_service(&app, req).await;
         assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    }
+
+    #[actix_web::test]
+    async fn test_get_expenditure() {
+        let config = test_config_with_setup(|db| async {
+            let budget = db.create_budget(CreateBudget {
+                name: "Test Budget".to_string(),
+                interval_name: "monthly".to_string()
+            }).await.unwrap();
+            let category = db.create_expense_category(CreateExpenseCategory {
+                name: "Breakfast".to_string(),
+                amount: 40000,
+                budget_id: budget.id
+            }).await.unwrap();
+            db.create_expenditure(CreateExpenditure {
+                description: "waffles".to_string(),
+                vendor: "Waffle House".to_string(),
+                amount: 1200,
+                expense_category_id: category.id
+            }).await.unwrap();
+            Ok(db)
+        }).await;
+        let app = test::init_service(
+            App::new().configure(config)
+        ).await;
+        let req = test::TestRequest::get()
+            .uri("/api/v1/expenditures/1")
+            .insert_header(("Accept", "application/json"))
+            .to_request();
+        let expenditure: Expenditure = test::call_and_read_body_json(&app, req).await;
+        assert_eq!(expenditure.id, 1);
+        assert_eq!(expenditure.description, "waffles".to_string());
+        assert_eq!(expenditure.vendor, "Waffle House".to_string());
+        assert_eq!(expenditure.amount, 1200);
     }
 
     #[actix_web::test]
