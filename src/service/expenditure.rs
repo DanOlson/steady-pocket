@@ -4,6 +4,10 @@ use crate::{
     models::{CreateExpenditure, Expenditure, UpdateExpenditure}
 };
 
+pub async fn for_category(repo: &dyn Repository, expense_category_id: i32) -> Result<Vec<Expenditure>> {
+    repo.expenditures(&[expense_category_id]).await
+}
+
 pub async fn create(repo: &dyn Repository, expenditure: CreateExpenditure) -> Result<Expenditure> {
     repo.create_expenditure(expenditure).await
 }

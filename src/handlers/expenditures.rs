@@ -4,7 +4,28 @@ use crate::{
     repository::Repository,
     models::{CreateExpenditureDTO, UpdateExpenditureDTO}
 };
-use actix_web::{delete, patch, post, web, HttpResponse};
+use serde::Deserialize;
+use actix_web::{delete, get, patch, post, web, HttpResponse};
+
+#[derive(Deserialize)]
+pub struct QueryString {
+    expense_category_id: i32
+}
+
+#[get("/expenditures")]
+pub async fn get_expenditures(
+    repo: web::Data<dyn Repository>,
+    query: web::Query<QueryString>,
+) -> Result<HttpResponse> {
+    let repo = repo.into_inner();
+    let query = query.into_inner();
+
+    let expenditures = service::expenditure::for_category(&*repo, query.expense_category_id).await?;
+    let response = HttpResponse::Ok()
+        .json(expenditures);
+    Ok(response)
+}
+
 
 #[post("/expenditures")]
 pub async fn create_expenditure(
@@ -65,6 +86,57 @@ mod tests {
             CreateExpenditure
         }
     };
+
+    #[actix_web::test]
+    async fn test_get_expenditures() {
+        let config = test_config_with_setup(|db| async {
+            let budget = db.create_budget(CreateBudget {
+                name: "Test Budget".to_string(),
+                interval_name: "monthly".to_string()
+            }).await.unwrap();
+            let category = db.create_expense_category(CreateExpenseCategory {
+                name: "Groceries".to_string(),
+                amount: 50000,
+                budget_id: budget.id
+            }).await.unwrap();
+            db.create_expenditure(CreateExpenditure {
+                description: "waffles".to_string(),
+                vendor: "Waffle House".to_string(),
+                amount: 1200,
+                expense_category_id: category.id
+            }).await.unwrap();
+            db.create_expenditure(CreateExpenditure {
+                description: "chicken".to_string(),
+                vendor: "Chick Fil-A".to_string(),
+                amount: 862,
+                expense_category_id: category.id
+            }).await.unwrap();
+            Ok(db)
+        }).await;
+        let app = test::init_service(
+            App::new().configure(config)
+        ).await;
+        let req = test::TestRequest::get()
+            .uri("/api/v1/expenditures?expense_category_id=1")
+            .insert_header(("Accept", "application/json"))
+            .to_request();
+        let expenditures: Vec<Expenditure> = test::call_and_read_body_json(&app, req).await;
+        assert_eq!(expenditures.len(), 2);
+    }
+
+    #[actix_web::test]
+    async fn test_get_expenditures_no_filter() {
+        let config = test_config().await;
+        let app = test::init_service(
+            App::new().configure(config)
+        ).await;
+        let req = test::TestRequest::get()
+            .uri("/api/v1/expenditures")
+            .insert_header(("Accept", "application/json"))
+            .to_request();
+        let response = test::call_service(&app, req).await;
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    }
 
     #[actix_web::test]
     async fn test_create_expenditure() {
