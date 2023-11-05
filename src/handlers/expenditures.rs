@@ -2,25 +2,19 @@ use crate::{
     prelude::*,
     service,
     repository::Repository,
-    models::{CreateExpenditureDTO, UpdateExpenditureDTO}
+    models::{CreateExpenditureDTO, UpdateExpenditureDTO, ExpendituresQuery}
 };
-use serde::Deserialize;
 use actix_web::{delete, get, patch, post, web, HttpResponse};
-
-#[derive(Deserialize)]
-pub struct QueryString {
-    expense_category_id: i32
-}
 
 #[get("/expenditures")]
 pub async fn get_expenditures(
     repo: web::Data<dyn Repository>,
-    query: web::Query<QueryString>,
+    query: web::Query<ExpendituresQuery>,
 ) -> Result<HttpResponse> {
     let repo = repo.into_inner();
     let query = query.into_inner();
 
-    let expenditures = service::expenditure::for_category(&*repo, query.expense_category_id).await?;
+    let expenditures = service::expenditure::for_query(&*repo, query).await?;
     let response = HttpResponse::Ok().json(expenditures);
     Ok(response)
 }

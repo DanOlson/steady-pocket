@@ -1,11 +1,16 @@
 use crate::{
     prelude::*,
     repository::Repository,
-    models::{CreateExpenditure, Expenditure, UpdateExpenditure}
+    models::{
+        CreateExpenditure,
+        Expenditure,
+        UpdateExpenditure,
+        ExpendituresQuery
+    }
 };
 
-pub async fn for_category(repo: &dyn Repository, expense_category_id: i32) -> Result<Vec<Expenditure>> {
-    repo.expenditures(&[expense_category_id]).await
+pub async fn for_query(repo: &dyn Repository, query: ExpendituresQuery) -> Result<Vec<Expenditure>> {
+    repo.expenditures(&[query.expense_category_id]).await
 }
 
 pub async fn find(repo: &dyn Repository, id: i32) -> Result<Expenditure> {

@@ -108,3 +108,8 @@ pub struct UpdateExpenditure {
     pub description: Option<String>,
     pub vendor: Option<String>,
 }
+
+#[derive(Deserialize)]
+pub struct ExpendituresQuery {
+    pub expense_category_id: i32
+}
