@@ -35,4 +35,5 @@ pub trait Repository {
     async fn expenditures(&self, category_ids: &[i32]) -> Result<Vec<Expenditure>>;
     async fn create_expenditure(&self, expenditure: CreateExpenditure) -> Result<Expenditure>;
     async fn update_expenditure(&self, id: i32, expenditure: UpdateExpenditure) -> Result<()>;
+    async fn delete_expenditure(&self, id: i32) -> Result<()>;
 }

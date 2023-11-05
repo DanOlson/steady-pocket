@@ -74,4 +74,8 @@ impl Repository for DatabaseRepository {
     async fn update_expenditure(&self, id: i32, expenditure: UpdateExpenditure) -> Result<()> {
         self.db.update_expenditure(id, expenditure).await
     }
+
+    async fn delete_expenditure(&self, id: i32) -> Result<()> {
+        self.db.delete_expenditure(id).await
+    }
 }

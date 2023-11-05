@@ -11,3 +11,7 @@ pub async fn create(repo: &dyn Repository, expenditure: CreateExpenditure) -> Re
 pub async fn update(repo: &dyn Repository, id: i32, expenditure: UpdateExpenditure) -> Result<()> {
     repo.update_expenditure(id, expenditure).await
 }
+
+pub async fn delete(repo: &dyn Repository, id: i32) -> Result<()> {
+    repo.delete_expenditure(id).await
+}

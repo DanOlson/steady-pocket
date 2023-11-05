@@ -99,4 +99,13 @@ impl Db {
 
         Ok(())
     }
+
+    pub async fn delete_expenditure(&self, id: i32) -> Result<()> {
+        let q = include_str!("sql/delete_expenditure.sql");
+        sqlx::query(q)
+            .bind(id)
+            .execute(&self.0)
+            .await?;
+        Ok(())
+    }
 }

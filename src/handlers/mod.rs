@@ -25,6 +25,7 @@ pub fn api_config(repo: impl Repository + 'static) -> impl FnOnce(&mut ServiceCo
                 .service(update_category)
                 .service(create_expenditure)
                 .service(update_expenditure)
+                .service(delete_expenditure)
         );
     }
 }
