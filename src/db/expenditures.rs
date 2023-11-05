@@ -1,9 +1,9 @@
 use crate::{
     prelude::*,
     db::Db,
-    models::{Expenditure, CreateExpenditure}
+    models::{Expenditure, CreateExpenditure, UpdateExpenditure}
 };
-use sqlx::{sqlite::SqliteRow, Row};
+use sqlx::{sqlite::SqliteRow, Row, QueryBuilder};
 
 impl Db {
     pub async fn get_expenditure(&self, id: i32) -> Result<Expenditure> {
@@ -72,5 +72,31 @@ impl Db {
             .await?;
 
         Ok(expenditure)
+    }
+
+    pub async fn update_expenditure(&self, id: i32, expenditure: UpdateExpenditure) -> Result<()> {
+        let mut builder = QueryBuilder::new("update expenditures set ");
+        let mut separator = builder.separated(", ");
+
+        if let Some(description) = expenditure.description {
+            separator.push("description = ");
+            separator.push_bind_unseparated(description);
+        }
+        if let Some(vendor) = expenditure.vendor {
+            separator.push("vendor = ");
+            separator.push_bind_unseparated(vendor);
+        }
+        if let Some(amount) = expenditure.amount {
+            separator.push("amount = ");
+            separator.push_bind_unseparated(amount);
+        }
+        builder.push("where id = ");
+        builder.push_bind(id);
+
+        builder.build()
+            .execute(&self.0)
+            .await?;
+
+        Ok(())
     }
 }

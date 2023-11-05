@@ -10,7 +10,8 @@ use super::{
     CreateExpenseCategory,
     UpdateExpenseCategory,
     Expenditure,
-    CreateExpenditure
+    CreateExpenditure,
+    UpdateExpenditure,
 };
 
 #[derive(Debug, Clone)]
@@ -68,5 +69,9 @@ impl Repository for DatabaseRepository {
 
     async fn create_expenditure(&self, expenditure: CreateExpenditure) -> Result<Expenditure> {
         self.db.create_expenditure(expenditure).await
+    }
+
+    async fn update_expenditure(&self, id: i32, expenditure: UpdateExpenditure) -> Result<()> {
+        self.db.update_expenditure(id, expenditure).await
     }
 }

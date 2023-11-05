@@ -96,3 +96,15 @@ pub struct CreateExpenditure {
     pub description: String,
     pub expense_category_id: i32,
 }
+
+#[derive(Deserialize)]
+pub struct UpdateExpenditureDTO {
+    pub expenditure: UpdateExpenditure
+}
+
+#[derive(Deserialize)]
+pub struct UpdateExpenditure {
+    pub amount: Option<i32>,
+    pub description: Option<String>,
+    pub vendor: Option<String>,
+}
