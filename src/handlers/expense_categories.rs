@@ -4,7 +4,7 @@ use crate::{
     repository::Repository,
     models::{CreateExpenseCategoryDTO, UpdateExpenseCategoryDTO}
 };
-use actix_web::{web, get, patch, post, HttpResponse};
+use actix_web::{web, delete, get, patch, post, HttpResponse};
 
 #[post("/expense_categories")]
 pub async fn create_category(
@@ -48,26 +48,29 @@ pub async fn get_category(
     Ok(response)
 }
 
+#[delete("/expense_categories/{id}")]
+pub async fn delete_category(
+    repo: web::Data<dyn Repository>,
+    id: web::Path<i32>
+) -> Result<HttpResponse> {
+    let repo = repo.into_inner();
+    let id = id.into_inner();
+    service::category::delete(&*repo, id).await?;
+
+    let response = HttpResponse::NoContent().finish();
+    Ok(response)
+}
+
 #[cfg(test)]
 mod tests {
     use crate::{
         handlers::test_prelude::*,
-        models::{
-            CreateBudget,
-            ExpenseCategory,
-            CreateExpenseCategory,
-        }
+        models::ExpenseCategory
     };
 
-    #[actix_web::test]
-    async fn test_create_category() {
-        let config = test_config_with_setup(|db| async {
-            db.create_budget(CreateBudget {
-                name: "Test".to_string(),
-                interval_name: "monthly".to_string()
-            }).await?;
-            Ok(db)
-        }).await;
+    #[sqlx::test(migrator = "MIGRATOR", fixtures("budget"))]
+    async fn test_create_category(pool: SqlitePool) {
+        let config = test_config_with_pool(pool).await;
         let app = test::init_service(
             App::new().configure(config)
         ).await;
@@ -90,20 +93,9 @@ mod tests {
         assert_eq!(resp.total_spend_to_date, 0);
     }
 
-    #[actix_web::test]
-    async fn test_update_category_name() {
-        let config = test_config_with_setup(|db| async {
-            let budget = db.create_budget(CreateBudget {
-                name: "Test Budget".to_string(),
-                interval_name: "monthly".to_string()
-            }).await.unwrap();
-            db.create_expense_category(CreateExpenseCategory {
-                name: "Mortgage".to_string(),
-                amount: 200000,
-                budget_id: budget.id
-            }).await.unwrap();
-            Ok(db)
-        }).await;
+    #[sqlx::test(migrator = "MIGRATOR", fixtures("category"))]
+    async fn test_update_category_name(pool: SqlitePool) {
+        let config = test_config_with_pool(pool).await;
         let app = test::init_service(
             App::new().configure(config)
         ).await;
@@ -117,24 +109,13 @@ mod tests {
         assert_eq!(response.status(), StatusCode::NO_CONTENT);
     }
 
-    #[actix_web::test]
-    async fn test_update_category_amount() {
-        let config = test_config_with_setup(|db| async {
-            let budget = db.create_budget(CreateBudget {
-                name: "Test Budget".to_string(),
-                interval_name: "monthly".to_string()
-            }).await.unwrap();
-            db.create_expense_category(CreateExpenseCategory {
-                name: "Mortgage".to_string(),
-                amount: 200000,
-                budget_id: budget.id
-            }).await.unwrap();
-            Ok(db)
-        }).await;
+    #[sqlx::test(migrator = "MIGRATOR", fixtures("category"))]
+    async fn test_update_category_amount(pool: SqlitePool) {
+        let config = test_config_with_pool(pool).await;
         let app = test::init_service(
             App::new().configure(config)
         ).await;
-        let body = r#"{"category":{"amount":250000}}"#.as_bytes();
+        let body = r#"{"category":{"amount":200000}}"#.as_bytes();
         let req = test::TestRequest::patch()
             .uri("/api/v1/expense_categories/1")
             .insert_header(("Content-Type", "application/json"))
@@ -144,20 +125,9 @@ mod tests {
         assert_eq!(response.status(), StatusCode::NO_CONTENT);
     }
 
-    #[actix_web::test]
-    async fn test_update_category_name_and_amount() {
-        let config = test_config_with_setup(|db| async {
-            let budget = db.create_budget(CreateBudget {
-                name: "Test Budget".to_string(),
-                interval_name: "monthly".to_string()
-            }).await.unwrap();
-            db.create_expense_category(CreateExpenseCategory {
-                name: "Mortgage".to_string(),
-                amount: 200000,
-                budget_id: budget.id
-            }).await.unwrap();
-            Ok(db)
-        }).await;
+    #[sqlx::test(migrator = "MIGRATOR", fixtures("category"))]
+    async fn test_update_category_name_and_amount(pool: SqlitePool) {
+        let config = test_config_with_pool(pool).await;
         let app = test::init_service(
             App::new().configure(config)
         ).await;
@@ -171,20 +141,9 @@ mod tests {
         assert_eq!(response.status(), StatusCode::NO_CONTENT);
     }
 
-    #[actix_web::test]
-    async fn test_get_category() {
-        let config = test_config_with_setup(|db| async {
-            let budget = db.create_budget(CreateBudget {
-                name: "Test Budget".to_string(),
-                interval_name: "monthly".to_string()
-            }).await.unwrap();
-            db.create_expense_category(CreateExpenseCategory {
-                name: "Mortgage".to_string(),
-                amount: 200000,
-                budget_id: budget.id
-            }).await.unwrap();
-            Ok(db)
-        }).await;
+    #[sqlx::test(migrator = "MIGRATOR", fixtures("category"))]
+    async fn test_get_category(pool: SqlitePool) {
+        let config = test_config_with_pool(pool).await;
         let app = test::init_service(
             App::new().configure(config)
         ).await;
@@ -194,5 +153,36 @@ mod tests {
         let response: ExpenseCategory = test::call_and_read_body_json(&app, req).await;
         assert_eq!(response.id, 1);
         assert_eq!(response.name, "Mortgage".to_string());
+    }
+
+    #[actix_web::test]
+    async fn test_get_category_not_found() {
+        let app = test::init_service(
+            App::new().configure(test_config().await)
+        ).await;
+        let req = test::TestRequest::get()
+            .uri("/api/v1/expense_categories/1337")
+            .to_request();
+        let response = test::call_service(&app, req).await;
+        assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    }
+
+    #[sqlx::test(migrator = "MIGRATOR", fixtures("category"))]
+    async fn test_delete_category(pool: SqlitePool) {
+        let conf = test_config_with_pool(pool).await;
+        let app = test::init_service(
+            App::new().configure(conf)
+        ).await;
+        let req = test::TestRequest::delete()
+            .uri("/api/v1/expense_categories/1")
+            .to_request();
+        let response = test::call_service(&app, req).await;
+        assert_eq!(response.status(), StatusCode::NO_CONTENT);
+
+        let req = test::TestRequest::get()
+            .uri("/api/v1/expense_categories/1")
+            .to_request();
+        let response = test::call_service(&app, req).await;
+        assert_eq!(response.status(), StatusCode::NOT_FOUND);
     }
 }

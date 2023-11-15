@@ -56,7 +56,11 @@ impl Repository for DatabaseRepository {
     }
 
     async fn update_expense_category(&self, id: i32, category: UpdateExpenseCategory) -> Result<()> {
-        self.db.update_expense_category(id, category).await
+        self.db.update_category(id, category).await
+    }
+
+    async fn delete_expense_category(&self, id: i32) -> Result<()> {
+        self.db.delete_category(id).await
     }
 
     async fn expenditure(&self, id: i32) -> Result<Expenditure> {

@@ -84,40 +84,12 @@ pub async fn delete_expenditure(
 mod tests {
     use crate::{
         handlers::test_prelude::*,
-        models::{
-            CreateBudget,
-            CreateExpenseCategory,
-            Expenditure,
-            CreateExpenditure
-        }
+        models::Expenditure
     };
 
-    #[actix_web::test]
-    async fn test_get_expenditures() {
-        let config = test_config_with_setup(|db| async {
-            let budget = db.create_budget(CreateBudget {
-                name: "Test Budget".to_string(),
-                interval_name: "monthly".to_string()
-            }).await.unwrap();
-            let category = db.create_expense_category(CreateExpenseCategory {
-                name: "Groceries".to_string(),
-                amount: 50000,
-                budget_id: budget.id
-            }).await.unwrap();
-            db.create_expenditure(CreateExpenditure {
-                description: "waffles".to_string(),
-                vendor: "Waffle House".to_string(),
-                amount: 1200,
-                expense_category_id: category.id
-            }).await.unwrap();
-            db.create_expenditure(CreateExpenditure {
-                description: "chicken".to_string(),
-                vendor: "Chick Fil-A".to_string(),
-                amount: 862,
-                expense_category_id: category.id
-            }).await.unwrap();
-            Ok(db)
-        }).await;
+    #[sqlx::test(migrator = "MIGRATOR", fixtures("expenditures"))]
+    async fn test_get_expenditures(pool: SqlitePool) {
+        let config = test_config_with_pool(pool).await;
         let app = test::init_service(
             App::new().configure(config)
         ).await;
@@ -126,7 +98,7 @@ mod tests {
             .insert_header(("Accept", "application/json"))
             .to_request();
         let expenditures: Vec<Expenditure> = test::call_and_read_body_json(&app, req).await;
-        assert_eq!(expenditures.len(), 2);
+        assert_eq!(expenditures.len(), 3);
     }
 
     #[actix_web::test]
@@ -143,26 +115,9 @@ mod tests {
         assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     }
 
-    #[actix_web::test]
-    async fn test_get_expenditure() {
-        let config = test_config_with_setup(|db| async {
-            let budget = db.create_budget(CreateBudget {
-                name: "Test Budget".to_string(),
-                interval_name: "monthly".to_string()
-            }).await.unwrap();
-            let category = db.create_expense_category(CreateExpenseCategory {
-                name: "Breakfast".to_string(),
-                amount: 40000,
-                budget_id: budget.id
-            }).await.unwrap();
-            db.create_expenditure(CreateExpenditure {
-                description: "waffles".to_string(),
-                vendor: "Waffle House".to_string(),
-                amount: 1200,
-                expense_category_id: category.id
-            }).await.unwrap();
-            Ok(db)
-        }).await;
+    #[sqlx::test(migrator = "MIGRATOR", fixtures("expenditures"))]
+    async fn test_get_expenditure(pool: SqlitePool) {
+        let config = test_config_with_pool(pool).await;
         let app = test::init_service(
             App::new().configure(config)
         ).await;
@@ -172,25 +127,14 @@ mod tests {
             .to_request();
         let expenditure: Expenditure = test::call_and_read_body_json(&app, req).await;
         assert_eq!(expenditure.id, 1);
-        assert_eq!(expenditure.description, "waffles".to_string());
-        assert_eq!(expenditure.vendor, "Waffle House".to_string());
-        assert_eq!(expenditure.amount, 1200);
+        assert_eq!(expenditure.description, "Waffles".to_string());
+        assert_eq!(expenditure.vendor, "Kroger".to_string());
+        assert_eq!(expenditure.amount, 1268);
     }
 
-    #[actix_web::test]
-    async fn test_create_expenditure() {
-        let config = test_config_with_setup(|db| async {
-            let budget = db.create_budget(CreateBudget {
-                name: "Test Budget".to_string(),
-                interval_name: "monthly".to_string()
-            }).await.unwrap();
-            db.create_expense_category(CreateExpenseCategory {
-                name: "Groceries".to_string(),
-                amount: 50000,
-                budget_id: budget.id
-            }).await.unwrap();
-            Ok(db)
-        }).await;
+    #[sqlx::test(migrator = "MIGRATOR", fixtures("category"))]
+    async fn test_create_expenditure(pool: SqlitePool) {
+        let config = test_config_with_pool(pool).await;
         let app = test::init_service(
             App::new().configure(config)
         ).await;
@@ -217,18 +161,7 @@ mod tests {
 
     #[actix_web::test]
     async fn test_create_expenditure_bad_req() {
-        let config = test_config_with_setup(|db| async {
-            let budget = db.create_budget(CreateBudget {
-                name: "Test Budget".to_string(),
-                interval_name: "monthly".to_string()
-            }).await.unwrap();
-            db.create_expense_category(CreateExpenseCategory {
-                name: "Groceries".to_string(),
-                amount: 50000,
-                budget_id: budget.id
-            }).await.unwrap();
-            Ok(db)
-        }).await;
+        let config = test_config().await;
         let app = test::init_service(
             App::new().configure(config)
         ).await;
@@ -248,26 +181,9 @@ mod tests {
         assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     }
 
-    #[actix_web::test]
-    async fn test_update_expenditure_amount() {
-        let config = test_config_with_setup(|db| async {
-            let budget = db.create_budget(CreateBudget {
-                name: "Test Budget".to_string(),
-                interval_name: "monthly".to_string()
-            }).await.unwrap();
-            let category = db.create_expense_category(CreateExpenseCategory {
-                name: "Groceries".to_string(),
-                amount: 50000,
-                budget_id: budget.id
-            }).await.unwrap();
-            db.create_expenditure(CreateExpenditure {
-                description: "waffles".to_string(),
-                vendor: "Waffle House".to_string(),
-                amount: 1200,
-                expense_category_id: category.id
-            }).await.unwrap();
-            Ok(db)
-        }).await;
+    #[sqlx::test(migrator = "MIGRATOR", fixtures("expenditures"))]
+    async fn test_update_expenditure_amount(pool: SqlitePool) {
+        let config = test_config_with_pool(pool).await;
         let app = test::init_service(
             App::new().configure(config)
         ).await;
@@ -287,26 +203,9 @@ mod tests {
         assert_eq!(location, "/api/v1/expenditures/1");
     }
 
-    #[actix_web::test]
-    async fn test_update_expenditure_description() {
-        let config = test_config_with_setup(|db| async {
-            let budget = db.create_budget(CreateBudget {
-                name: "Test Budget".to_string(),
-                interval_name: "monthly".to_string()
-            }).await.unwrap();
-            let category = db.create_expense_category(CreateExpenseCategory {
-                name: "Groceries".to_string(),
-                amount: 50000,
-                budget_id: budget.id
-            }).await.unwrap();
-            db.create_expenditure(CreateExpenditure {
-                description: "waffles".to_string(),
-                vendor: "Waffle House".to_string(),
-                amount: 1200,
-                expense_category_id: category.id
-            }).await.unwrap();
-            Ok(db)
-        }).await;
+    #[sqlx::test(migrator = "MIGRATOR", fixtures("expenditures"))]
+    async fn test_update_expenditure_description(pool: SqlitePool) {
+        let config = test_config_with_pool(pool).await;
         let app = test::init_service(
             App::new().configure(config)
         ).await;
@@ -326,26 +225,9 @@ mod tests {
         assert_eq!(location, "/api/v1/expenditures/1");
     }
 
-    #[actix_web::test]
-    async fn test_update_expenditure_vendor() {
-        let config = test_config_with_setup(|db| async {
-            let budget = db.create_budget(CreateBudget {
-                name: "Test Budget".to_string(),
-                interval_name: "monthly".to_string()
-            }).await.unwrap();
-            let category = db.create_expense_category(CreateExpenseCategory {
-                name: "Groceries".to_string(),
-                amount: 50000,
-                budget_id: budget.id
-            }).await.unwrap();
-            db.create_expenditure(CreateExpenditure {
-                description: "waffles".to_string(),
-                vendor: "Waffle House".to_string(),
-                amount: 1200,
-                expense_category_id: category.id
-            }).await.unwrap();
-            Ok(db)
-        }).await;
+    #[sqlx::test(migrator = "MIGRATOR", fixtures("expenditures"))]
+    async fn test_update_expenditure_vendor(pool: SqlitePool) {
+        let config = test_config_with_pool(pool).await;
         let app = test::init_service(
             App::new().configure(config)
         ).await;
@@ -365,26 +247,9 @@ mod tests {
         assert_eq!(location, "/api/v1/expenditures/1");
     }
 
-    #[actix_web::test]
-    async fn test_delete_expenditure() {
-        let config = test_config_with_setup(|db| async {
-            let budget = db.create_budget(CreateBudget {
-                name: "Test Budget".to_string(),
-                interval_name: "monthly".to_string()
-            }).await.unwrap();
-            let category = db.create_expense_category(CreateExpenseCategory {
-                name: "Groceries".to_string(),
-                amount: 50000,
-                budget_id: budget.id
-            }).await.unwrap();
-            db.create_expenditure(CreateExpenditure {
-                description: "waffles".to_string(),
-                vendor: "Waffle House".to_string(),
-                amount: 1200,
-                expense_category_id: category.id
-            }).await.unwrap();
-            Ok(db)
-        }).await;
+    #[sqlx::test(migrator = "MIGRATOR", fixtures("expenditures"))]
+    async fn test_delete_expenditure(pool: SqlitePool) {
+        let config = test_config_with_pool(pool).await;
         let app = test::init_service(
             App::new().configure(config)
         ).await;

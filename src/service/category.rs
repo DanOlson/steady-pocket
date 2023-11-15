@@ -26,3 +26,10 @@ pub async fn update_category(
 ) -> Result<()> {
     repo.update_expense_category(id, update_category).await
 }
+
+pub async fn delete(
+    repo: &dyn Repository,
+    id: i32
+) -> Result<()> {
+    repo.delete_expense_category(id).await
+}

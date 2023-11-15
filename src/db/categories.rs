@@ -36,7 +36,7 @@ impl Db {
         Ok(category)
     }
 
-    pub async fn update_expense_category(&self, id: i32, category: UpdateExpenseCategory) -> Result<()> {
+    pub async fn update_category(&self, id: i32, category: UpdateExpenseCategory) -> Result<()> {
         let mut builder = QueryBuilder::new("update expense_categories set ");
         let mut separator = builder.separated(", ");
 
@@ -83,7 +83,13 @@ impl Db {
             .fetch_one(&self.0)
             .await?;
 
-        Ok(category)
+        // Due to joining to expenditures, the query can return no rows and
+        // results in an ID of 0
+        if category.id == 0 {
+            Err(Error::NotFound)
+        } else {
+            Ok(category)
+        }
     }
 
     pub async fn get_categories(&self, budget_id: i32) -> Result<Vec<ExpenseCategory>> {
@@ -109,5 +115,14 @@ impl Db {
             .await?;
 
         Ok(categories)
+    }
+
+    pub async fn delete_category(&self, id: i32) -> Result<()> {
+        let q = include_str!("sql/delete_category.sql");
+        sqlx::query(q)
+            .bind(id)
+            .execute(&self.0)
+            .await?;
+        Ok(())
     }
 }

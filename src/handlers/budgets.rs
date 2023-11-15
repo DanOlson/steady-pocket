@@ -61,10 +61,7 @@ pub async fn update_budget(
 mod tests {
     use crate::{
         handlers::test_prelude::*,
-        models::{
-            Budget,
-            CreateBudget,
-        }
+        models::Budget
     };
 
     #[actix_web::test]
@@ -91,15 +88,9 @@ mod tests {
         assert_eq!(resp.interval_name, "monthly".to_string());
     }
 
-    #[actix_web::test]
-    async fn test_update_budget() {
-        let config = test_config_with_setup(|db| async {
-            db.create_budget(CreateBudget {
-                name: "Initial Budget Name".to_string(),
-                interval_name: "monthly".to_string()
-            }).await?;
-            Ok(db)
-        }).await;
+    #[sqlx::test(migrator = "MIGRATOR", fixtures("budget"))]
+    async fn test_update_budget(pool: SqlitePool) {
+        let config = test_config_with_pool(pool).await;
         let app = test::init_service(
             App::new().configure(config)
         ).await;

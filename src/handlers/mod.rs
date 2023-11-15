@@ -23,6 +23,7 @@ pub fn api_config(repo: impl Repository + 'static) -> impl FnOnce(&mut ServiceCo
                 .service(get_category)
                 .service(create_category)
                 .service(update_category)
+                .service(delete_category)
                 .service(create_expenditure)
                 .service(update_expenditure)
                 .service(delete_expenditure)
@@ -38,24 +39,20 @@ pub mod test_prelude {
     pub use crate::{
         prelude::*,
         repository::{DatabaseRepository, Repository},
-        db::Db,
+        db::{Db, MIGRATOR},
     };
     pub use actix_web::{App, test, http::StatusCode, web::ServiceConfig};
-    use std::future::Future;
+    pub use sqlx::SqlitePool;
+
+    pub async fn test_config_with_pool(pool: sqlx::SqlitePool) -> impl FnOnce(&mut ServiceConfig) {
+        let db = Db::new(pool);
+        let repo = DatabaseRepository::new(db);
+        api_config(repo)
+    }
 
     // Setup the API config with an in-memory database
     pub async fn test_config() -> impl FnOnce(&mut ServiceConfig) {
         let repo = init_repo().await.unwrap();
-        api_config(repo)
-    }
-
-    pub async fn test_config_with_setup<F, Fut>(f: F) -> impl FnOnce(&mut ServiceConfig)
-        where
-            F: FnOnce(DatabaseRepository) -> Fut,
-            Fut: Future<Output = Result<DatabaseRepository>>
-    {
-        let repo = init_repo().await.unwrap();
-        let repo = f(repo).await.unwrap();
         api_config(repo)
     }
 

@@ -4,16 +4,6 @@ CREATE TABLE budgets (
     budget_interval TEXT
 );
 
-CREATE TABLE budgets_expense_categories (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    budget_id INTEGER,
-    expense_category_id INTEGER,
-    amount INTEGER NOT NULL,
-    time_period TEXT NOT NULL,
-    activated_at INTEGER NOT NULL,
-    deactivated_at INTEGER
-);
-
 CREATE TABLE expenditures (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     description TEXT,
