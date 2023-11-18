@@ -1640,23 +1640,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "rust-money"
-version = "0.1.0"
-dependencies = [
- "actix-web",
- "async-trait",
- "config",
- "derive_more",
- "dotenv",
- "env_logger",
- "log",
- "serde",
- "sqlx",
- "thiserror",
- "tokio",
-]
-
-[[package]]
 name = "rustc-demangle"
 version = "0.1.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2091,6 +2074,23 @@ dependencies = [
  "sqlx-core",
  "tracing",
  "url",
+]
+
+[[package]]
+name = "steady-pocket"
+version = "0.1.0"
+dependencies = [
+ "actix-web",
+ "async-trait",
+ "config",
+ "derive_more",
+ "dotenv",
+ "env_logger",
+ "log",
+ "serde",
+ "sqlx",
+ "thiserror",
+ "tokio",
 ]
 
 [[package]]
