@@ -2,15 +2,16 @@ use crate::{
     prelude::*,
     service,
     repository::Repository,
-    models::{CreateBudgetDTO, UpdateBudgetDTO}
+    models::{GetBudgetsDTO, CreateBudgetDTO, UpdateBudgetDTO}
 };
 use actix_web::{web, get, post, patch, HttpResponse};
 
 #[get("/budgets")]
 pub async fn get_budgets(repo: web::Data<dyn Repository>) -> Result<HttpResponse> {
     let budgets = repo.into_inner().budgets().await?;
+    let body = GetBudgetsDTO { budgets };
 
-    Ok(HttpResponse::Ok().json(budgets))
+    Ok(HttpResponse::Ok().json(body))
 }
 
 #[get("/budgets/{budget_id}")]
@@ -61,7 +62,7 @@ pub async fn update_budget(
 mod tests {
     use crate::{
         handlers::test_prelude::*,
-        models::Budget
+        models::{Budget, GetBudgetsDTO}
     };
 
     #[actix_web::test]
@@ -108,5 +109,18 @@ mod tests {
             .map(|v| v.to_str().unwrap())
             .unwrap();
         assert_eq!(location, "/api/v1/budgets/1");
+    }
+
+    #[sqlx::test(migrator = "MIGRATOR", fixtures("budget"))]
+    async fn test_get_budgets(pool: SqlitePool) {
+        let config = test_config_with_pool(pool).await;
+        let app = test::init_service(
+            App::new().configure(config)
+        ).await;
+        let req = test::TestRequest::get()
+            .uri("/api/v1/budgets")
+            .to_request();
+        let response: GetBudgetsDTO = test::call_and_read_body_json(&app, req).await;
+        assert_eq!(response.budgets.len(), 1);
     }
 }

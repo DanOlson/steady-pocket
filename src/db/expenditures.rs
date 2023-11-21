@@ -17,6 +17,7 @@ impl Db {
                     vendor: row.get("vendor"),
                     amount: row.get("amount"),
                     category_id: row.get("category_id"),
+                    created_at: row.get("created_at")
                 }
             })
             .fetch_one(&self.0)
@@ -44,11 +45,32 @@ impl Db {
                     vendor: row.get("vendor"),
                     amount: row.get("amount"),
                     category_id: row.get("category_id"),
+                    created_at: row.get("created_at")
                 }
             })
             .fetch_all(&self.0)
             .await?;
 
+        Ok(expenditures)
+    }
+
+    pub async fn get_expenditures_since(&self, category_id: i32, since: i64) -> Result<Vec<Expenditure>> {
+        let q = include_str!("sql/get_expenditures_since.sql");
+        let expenditures = sqlx::query(q)
+            .bind(category_id)
+            .bind(since)
+            .map(|row: SqliteRow| {
+                Expenditure {
+                    id: row.get("id"),
+                    description: row.get("description"),
+                    amount: row.get("amount"),
+                    category_id: row.get("category_id"),
+                    vendor: row.get("vendor"),
+                    created_at: row.get("created_at")
+                }
+            })
+            .fetch_all(&self.0)
+            .await?;
         Ok(expenditures)
     }
 
@@ -65,7 +87,8 @@ impl Db {
                     description: row.get("description"),
                     amount: row.get("amount"),
                     vendor: row.get("vendor"),
-                    category_id: row.get("expense_category_id")
+                    category_id: row.get("expense_category_id"),
+                    created_at: row.get("created_at")
                 }
             })
             .fetch_one(&self.0)

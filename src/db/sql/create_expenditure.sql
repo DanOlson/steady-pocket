@@ -11,7 +11,7 @@ insert into expenditures (
   ?,
   ?,
   ?,
-  current_timestamp,
-  current_timestamp,
-  current_timestamp
+  strftime('%s', 'now'),
+  strftime('%s', 'now'),
+  strftime('%s', 'now')
 ) returning *;

@@ -71,6 +71,10 @@ impl Repository for DatabaseRepository {
         self.db.get_expenditures(category_ids).await
     }
 
+    async fn expenditures_since(&self, category_id: i32, since: i64) -> Result<Vec<Expenditure>> {
+        self.db.get_expenditures_since(category_id, since).await
+    }
+
     async fn create_expenditure(&self, expenditure: CreateExpenditure) -> Result<Expenditure> {
         self.db.create_expenditure(expenditure).await
     }

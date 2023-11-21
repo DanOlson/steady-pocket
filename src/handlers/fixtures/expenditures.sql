@@ -10,6 +10,6 @@ insert into expenditures (
   created_at,
   updated_at
 ) values
-  (1, 'Waffles', 'Kroger', 1268, 1, current_timestamp, current_timestamp, current_timestamp),
-  (2, 'Sandwich ingredients', 'Publix', 2351, 1, current_timestamp, current_timestamp, current_timestamp),
-  (3, 'Fresh fruit', 'Walmart', 1683, 1, current_timestamp, current_timestamp, current_timestamp);
+  (1, 'Waffles', 'Kroger', 1268, 1, strftime('%s', 'now'), strftime('%s', 'now'), strftime('%s', 'now')),
+  (2, 'Sandwich ingredients', 'Publix', 2351, 1, strftime('%s', 'now'), strftime('%s', 'now'), strftime('%s', 'now')),
+  (3, 'Fresh fruit', 'Walmart', 1683, 1, strftime('%s', 'now'), strftime('%s', 'now'), strftime('%s', 'now'));

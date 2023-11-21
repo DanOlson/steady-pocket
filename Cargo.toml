@@ -11,6 +11,7 @@ async-trait = "0.1.73"
 log = "0.4.20"
 env_logger = "0.10.0"
 tokio = { version = "1.33.0", "features" = ["full"] }
+chrono = "0.4.31"
 config = "0.13.1"
 derive_more = "0.99.17"
 dotenv = "0.15.0"

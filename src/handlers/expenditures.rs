@@ -2,7 +2,12 @@ use crate::{
     prelude::*,
     service,
     repository::Repository,
-    models::{CreateExpenditureDTO, UpdateExpenditureDTO, ExpendituresQuery}
+    models::{
+        GetExpenditureDTO,
+        CreateExpenditure,
+        UpdateExpenditureDTO,
+        ExpendituresQuery
+    }
 };
 use actix_web::{delete, get, patch, post, web, HttpResponse};
 
@@ -28,20 +33,21 @@ pub async fn get_expenditure(
     let id = id.into_inner();
 
     let expenditure = service::expenditure::find(&*repo, id).await?;
-    let response = HttpResponse::Ok().json(expenditure);
+    let dto = GetExpenditureDTO { expenditure };
+    let response = HttpResponse::Ok().json(dto);
     Ok(response)
 }
 
 #[post("/expenditures")]
 pub async fn create_expenditure(
     repo: web::Data<dyn Repository>,
-    create_expenditure: web::Json<CreateExpenditureDTO>
+    create_expenditure: web::Json<CreateExpenditure>
 ) -> Result<HttpResponse> {
     let repo = repo.into_inner();
     let create_expenditure = create_expenditure.into_inner();
     let expenditure = service::expenditure::create(
         &*repo,
-        create_expenditure.expenditure
+        create_expenditure
     ).await?;
     let response = HttpResponse::Created()
         .insert_header(("Location", format!("/api/v1/expenditures/{}", expenditure.id)))
@@ -84,7 +90,7 @@ pub async fn delete_expenditure(
 mod tests {
     use crate::{
         handlers::test_prelude::*,
-        models::Expenditure
+        models::{Expenditure, GetExpenditureDTO}
     };
 
     #[sqlx::test(migrator = "MIGRATOR", fixtures("expenditures"))]
@@ -125,7 +131,8 @@ mod tests {
             .uri("/api/v1/expenditures/1")
             .insert_header(("Accept", "application/json"))
             .to_request();
-        let expenditure: Expenditure = test::call_and_read_body_json(&app, req).await;
+        let expenditure_dto: GetExpenditureDTO = test::call_and_read_body_json(&app, req).await;
+        let expenditure = expenditure_dto.expenditure;
         assert_eq!(expenditure.id, 1);
         assert_eq!(expenditure.description, "Waffles".to_string());
         assert_eq!(expenditure.vendor, "Kroger".to_string());
@@ -139,12 +146,10 @@ mod tests {
             App::new().configure(config)
         ).await;
         let body = r#"{
-            "expenditure": {
-                "amount": 12500,
-                "vendor": "Kroger",
-                "description": "groceries",
-                "expense_category_id": 1
-            }
+            "amount": 12500,
+            "vendor": "Kroger",
+            "description": "groceries",
+            "expense_category_id": 1
         }"#.as_bytes();
         let req = test::TestRequest::post()
             .uri("/api/v1/expenditures")

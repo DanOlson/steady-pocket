@@ -65,7 +65,7 @@ pub async fn delete_category(
 mod tests {
     use crate::{
         handlers::test_prelude::*,
-        models::ExpenseCategory
+        models::{ExpenseCategory, GetExpenseCategoryDTO}
     };
 
     #[sqlx::test(migrator = "MIGRATOR", fixtures("budget"))]
@@ -141,7 +141,7 @@ mod tests {
         assert_eq!(response.status(), StatusCode::NO_CONTENT);
     }
 
-    #[sqlx::test(migrator = "MIGRATOR", fixtures("category"))]
+    #[sqlx::test(migrator = "MIGRATOR", fixtures("expenditures"))]
     async fn test_get_category(pool: SqlitePool) {
         let config = test_config_with_pool(pool).await;
         let app = test::init_service(
@@ -150,9 +150,12 @@ mod tests {
         let req = test::TestRequest::get()
             .uri("/api/v1/expense_categories/1")
             .to_request();
-        let response: ExpenseCategory = test::call_and_read_body_json(&app, req).await;
-        assert_eq!(response.id, 1);
-        assert_eq!(response.name, "Mortgage".to_string());
+        let response: GetExpenseCategoryDTO = test::call_and_read_body_json(&app, req).await;
+        let category = response.category;
+        let expenditures = response.expenditures;
+        assert_eq!(category.id, 1);
+        assert_eq!(category.name, "Groceries".to_string());
+        assert_eq!(expenditures.len(), 3);
     }
 
     #[actix_web::test]
