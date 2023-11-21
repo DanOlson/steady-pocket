@@ -1,5 +1,6 @@
 use std::sync::Arc;
 use actix_web::web::{scope, Data, ServiceConfig};
+use actix_files as fs;
 use crate::repository::Repository;
 
 mod budgets;
@@ -29,7 +30,8 @@ pub fn api_config(repo: impl Repository + 'static) -> impl FnOnce(&mut ServiceCo
                 .service(delete_expenditure)
                 .service(get_expenditures)
                 .service(get_expenditure)
-        );
+        )
+        .service(fs::Files::new("/", "./client/build"));
     }
 }
 

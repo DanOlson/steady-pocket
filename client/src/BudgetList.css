@@ -1,0 +1,10 @@
+.BudgetList ul {
+  text-align: center;
+  margin-top: 0;
+}
+
+.BudgetList li {
+  list-style-type: none;
+  display: inline-block;
+  margin: 1rem;
+}

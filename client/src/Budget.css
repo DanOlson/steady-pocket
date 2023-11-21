@@ -1,0 +1,14 @@
+/* .budget .expense-category {
+  background: #EDE7F6;
+  padding: 1.5rem;
+  border-radius: 1rem;
+} */
+
+.budget .summary {
+  margin-top: 1rem;
+  margin-bottom: 2rem;
+}
+
+.budget .new-category {
+  margin: auto;
+}

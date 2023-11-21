@@ -1,0 +1,8 @@
+.new-category {
+  max-width: 600px;
+  margin: auto;
+}
+
+.new-category-form .btn-primary {
+  margin-right: 0.25rem;
+}

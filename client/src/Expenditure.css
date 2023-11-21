@@ -1,0 +1,19 @@
+.expense-category {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+.new-expenditure-form {
+  max-width: 600px;
+  margin: auto;
+}
+
+.expenditures {
+  margin: auto;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+.actions {
+  margin-top: 0.5rem;
+}
