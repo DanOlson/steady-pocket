@@ -62,7 +62,7 @@ pub async fn update_budget(
 mod tests {
     use crate::{
         handlers::test_prelude::*,
-        models::{Budget, GetBudgetsDTO}
+        models::{Budget, BudgetResponse, GetBudgetsDTO}
     };
 
     #[actix_web::test]
@@ -122,5 +122,20 @@ mod tests {
             .to_request();
         let response: GetBudgetsDTO = test::call_and_read_body_json(&app, req).await;
         assert_eq!(response.budgets.len(), 1);
+    }
+
+    #[sqlx::test(migrator = "MIGRATOR", fixtures("expenditures"))]
+    async fn test_get_budget(pool: SqlitePool) {
+        let config = test_config_with_pool(pool).await;
+        let app = test::init_service(
+            App::new().configure(config)
+        ).await;
+        let req = test::TestRequest::get()
+            .uri("/api/v1/budgets/1")
+            .to_request();
+        let response: BudgetResponse  = test::call_and_read_body_json(&app, req).await;
+        assert_eq!(response.categories.len(), 1);
+        assert_eq!(response.categories.first().unwrap().total_spend_to_date, 5302);
+        assert_eq!(response.expenditures.len(), 3);
     }
 }

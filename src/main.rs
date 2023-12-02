@@ -6,6 +6,7 @@ mod errors;
 mod handlers;
 mod service;
 mod repository;
+mod util;
 
 use crate::config::AppConfig;
 use crate::prelude::*;

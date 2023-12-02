@@ -7,4 +7,5 @@ select id
       ,created_at
       ,updated_at
 from expenditures
-where expense_category_id in ({});
+where effective_date >= ?
+  and expense_category_id in ({});

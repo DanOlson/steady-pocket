@@ -47,8 +47,8 @@ impl Repository for DatabaseRepository {
         self.db.get_category(id).await
     }
 
-    async fn expense_categories(&self, budget_id: i32) -> Result<Vec<ExpenseCategory>> {
-        self.db.get_categories(budget_id).await
+    async fn expense_categories(&self, budget_id: i32, since: i64) -> Result<Vec<ExpenseCategory>> {
+        self.db.get_categories(budget_id, since).await
     }
 
     async fn create_expense_category(&self, category: CreateExpenseCategory) -> Result<ExpenseCategory> {
@@ -67,8 +67,8 @@ impl Repository for DatabaseRepository {
         self.db.get_expenditure(id).await
     }
 
-    async fn expenditures(&self, category_ids: &[i32]) -> Result<Vec<Expenditure>> {
-        self.db.get_expenditures(category_ids).await
+    async fn expenditures(&self, category_ids: &[i32], since: i64) -> Result<Vec<Expenditure>> {
+        self.db.get_expenditures(category_ids, since).await
     }
 
     async fn expenditures_since(&self, category_id: i32, since: i64) -> Result<Vec<Expenditure>> {

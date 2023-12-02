@@ -92,9 +92,10 @@ impl Db {
         }
     }
 
-    pub async fn get_categories(&self, budget_id: i32) -> Result<Vec<ExpenseCategory>> {
+    pub async fn get_categories(&self, budget_id: i32, since: i64) -> Result<Vec<ExpenseCategory>> {
         let q = include_str!("sql/get_budget_expense_categories.sql");
         let categories = sqlx::query(q)
+            .bind(since)
             .bind(budget_id)
             .map(|row: SqliteRow| {
                 let expenditure_ids: Vec<i32> = row.get::<String, &str>("expenditure_ids")

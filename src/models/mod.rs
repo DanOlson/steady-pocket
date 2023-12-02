@@ -87,14 +87,14 @@ pub struct GetExpenditureDTO {
     pub expenditure: Expenditure
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct BudgetDTO {
     pub id: i32,
     pub name: String,
     pub category_ids: Vec<i32>,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct BudgetResponse {
     pub budget: BudgetDTO,
     pub categories: Vec<ExpenseCategory>,

@@ -26,14 +26,15 @@ impl Db {
         Ok(expenditure)
     }
 
-    pub async fn get_expenditures(&self, category_ids: &[i32]) -> Result<Vec<Expenditure>> {
+    pub async fn get_expenditures(&self, category_ids: &[i32], since: i64) -> Result<Vec<Expenditure>> {
         let placeholders = category_ids
             .iter()
             .map(|_| "?")
             .collect::<Vec<&str>>()
             .join(", ");
         let q = format!(include_str!("sql/get_expenditures.sql"), placeholders);
-        let mut query = sqlx::query(&q);
+        let mut query = sqlx::query(&q)
+            .bind(since);
         for id in category_ids {
             query = query.bind(id);
         }
