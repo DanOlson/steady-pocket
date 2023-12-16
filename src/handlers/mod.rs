@@ -1,5 +1,8 @@
 use std::sync::Arc;
-use actix_web::web::{scope, Data, ServiceConfig};
+use actix_web::{
+    web::{scope, Data, ServiceConfig},
+    dev::{ServiceRequest, ServiceResponse, fn_service},
+};
 use actix_files as fs;
 use crate::repository::Repository;
 
@@ -31,7 +34,16 @@ pub fn api_config(repo: impl Repository + 'static) -> impl FnOnce(&mut ServiceCo
                 .service(get_expenditures)
                 .service(get_expenditure)
         )
-        .service(fs::Files::new("/", "./client/build"));
+        .service(
+            fs::Files::new("/", "./client/build")
+                .index_file("index.html")
+                .default_handler(fn_service(|req: ServiceRequest| async {
+                    let (req, _) = req.into_parts();
+                    let file = fs::NamedFile::open_async("./client/build/index.html").await?;
+                    let res = file.into_response(&req);
+                    Ok(ServiceResponse::new(req, res))
+                }))
+        );
     }
 }
 
