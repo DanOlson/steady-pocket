@@ -4,6 +4,8 @@ A budgeting application
 
 ## Development
 
+### Running the API
+
 Install cargo-binstall
 
 ```bash
@@ -21,6 +23,17 @@ Start the server (auto-reloading enabled)
 ```bash
 cargo watch -x run
 ```
+
+The app will run on port 8081
+
+### Building the frontend
+
+```bash
+cd ./client
+npm run build
+```
+
+With the client app built, you can visit `http::localhost:8081/index.html`
 
 ## Build & Deployment
 
