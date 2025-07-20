@@ -70,3 +70,23 @@ Deployment is
 ```bash
 ./script/frontend/deploy.sh
 ```
+
+### Unit file for running via Systemd
+
+```
+[Unit]
+Description=Steady Pocket REST API for SmartMoney frontend
+After=network.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/opt/smart-money
+ExecStart=/opt/smart-money/steady-pocket
+Environment="SERVER_ADDR=0.0.0.0:80"
+Environment="DATABASE_URL=sqlite:./steady-pocket.db"
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+```

@@ -27,7 +27,7 @@ export default function ExpenditureForm (props) {
 
   function setAmount(e) {
     const amount = e.target.value
-    setExpenditure({ ...expenditure, amount: amount * 100 })
+    setExpenditure({ ...expenditure, amount: Math.round(amount * 100) })
   }
 
   function setDescription(e) {

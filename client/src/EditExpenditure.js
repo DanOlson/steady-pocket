@@ -29,7 +29,7 @@ export default function EditExpenditure () {
       <ExpenditureForm
         budgetId={budgetId}
         category={category}
-        amount={expenditure.amount / 100.0}
+        amount={Math.round(expenditure.amount / 100.0)}
         vendor={expenditure.vendor}
         description={expenditure.description}
         onSubmit={handleSubmit}
