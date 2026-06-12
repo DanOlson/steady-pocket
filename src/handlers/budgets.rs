@@ -1,10 +1,10 @@
 use crate::{
+    models::{CreateBudgetDTO, GetBudgetsDTO, UpdateBudgetDTO},
     prelude::*,
-    service,
     repository::Repository,
-    models::{GetBudgetsDTO, CreateBudgetDTO, UpdateBudgetDTO}
+    service,
 };
-use actix_web::{web, get, post, patch, HttpResponse};
+use actix_web::{get, patch, post, web, HttpResponse};
 
 #[get("/budgets")]
 pub async fn get_budgets(repo: web::Data<dyn Repository>) -> Result<HttpResponse> {
@@ -29,7 +29,7 @@ pub async fn get_budget(
 #[post("/budgets")]
 pub async fn create_budget(
     repo: web::Data<dyn Repository>,
-    budget: web::Json<CreateBudgetDTO>
+    budget: web::Json<CreateBudgetDTO>,
 ) -> Result<HttpResponse> {
     let budget = budget.into_inner().budget;
     let repo = repo.into_inner();
@@ -45,7 +45,7 @@ pub async fn create_budget(
 pub async fn update_budget(
     repo: web::Data<dyn Repository>,
     budget: web::Json<UpdateBudgetDTO>,
-    budget_id: web::Path<i32>
+    budget_id: web::Path<i32>,
 ) -> Result<HttpResponse> {
     let budget = budget.into_inner().budget;
     let repo = repo.into_inner();
@@ -62,21 +62,19 @@ pub async fn update_budget(
 mod tests {
     use crate::{
         handlers::test_prelude::*,
-        models::{Budget, BudgetResponse, GetBudgetsDTO}
+        models::{Budget, BudgetResponse, GetBudgetsDTO},
     };
 
     #[actix_web::test]
     async fn test_create_budget() {
-        let app = test::init_service(
-            App::new().configure(test_config().await)
-        )
-        .await;
+        let app = test::init_service(App::new().configure(test_config().await)).await;
         let body = r#"{
             "budget": {
                 "name": "Simpson Family Budget",
                 "interval_name": "monthly"
             }
-        }"#.as_bytes();
+        }"#
+        .as_bytes();
         let req = test::TestRequest::post()
             .uri("/api/v1/budgets")
             .insert_header(("Content-Type", "application/json"))
@@ -92,9 +90,7 @@ mod tests {
     #[sqlx::test(migrator = "MIGRATOR", fixtures("budget"))]
     async fn test_update_budget(pool: SqlitePool) {
         let config = test_config_with_pool(pool).await;
-        let app = test::init_service(
-            App::new().configure(config)
-        ).await;
+        let app = test::init_service(App::new().configure(config)).await;
         let body = r#"{"budget":{"name":"Updated Budget Name"}}"#.as_bytes();
         let req = test::TestRequest::patch()
             .uri("/api/v1/budgets/1")
@@ -114,12 +110,8 @@ mod tests {
     #[sqlx::test(migrator = "MIGRATOR", fixtures("budget"))]
     async fn test_get_budgets(pool: SqlitePool) {
         let config = test_config_with_pool(pool).await;
-        let app = test::init_service(
-            App::new().configure(config)
-        ).await;
-        let req = test::TestRequest::get()
-            .uri("/api/v1/budgets")
-            .to_request();
+        let app = test::init_service(App::new().configure(config)).await;
+        let req = test::TestRequest::get().uri("/api/v1/budgets").to_request();
         let response: GetBudgetsDTO = test::call_and_read_body_json(&app, req).await;
         assert_eq!(response.budgets.len(), 1);
     }
@@ -127,15 +119,20 @@ mod tests {
     #[sqlx::test(migrator = "MIGRATOR", fixtures("expenditures"))]
     async fn test_get_budget(pool: SqlitePool) {
         let config = test_config_with_pool(pool).await;
-        let app = test::init_service(
-            App::new().configure(config)
-        ).await;
+        let app = test::init_service(App::new().configure(config)).await;
         let req = test::TestRequest::get()
             .uri("/api/v1/budgets/1")
             .to_request();
-        let response: BudgetResponse  = test::call_and_read_body_json(&app, req).await;
+        let response: BudgetResponse = test::call_and_read_body_json(&app, req).await;
         assert_eq!(response.categories.len(), 1);
-        assert_eq!(response.categories.first().unwrap().total_spend_to_date, 5302);
-        assert_eq!(response.expenditures.len(), 3);
+        assert_eq!(
+            response.categories.first().unwrap().total_spend_to_date,
+            5302
+        );
+        assert_eq!(response.summary.budgeted_amount, 9000);
+        assert_eq!(response.summary.categorized_spend_to_date, 5302);
+        assert_eq!(response.summary.uncategorized_spend_to_date, 4321);
+        assert_eq!(response.summary.total_spend_to_date, 9623);
+        assert_eq!(response.expenditures.len(), 4);
     }
 }

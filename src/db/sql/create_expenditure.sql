@@ -2,7 +2,9 @@ insert into expenditures (
   description,
   vendor,
   amount,
+  budget_id,
   expense_category_id,
+  categorization_status,
   effective_date,
   created_at,
   updated_at
@@ -11,7 +13,18 @@ insert into expenditures (
   ?,
   ?,
   ?,
-  strftime('%s', 'now'),
+  ?,
+  ?,
+  coalesce(?, strftime('%s', 'now')),
   strftime('%s', 'now'),
   strftime('%s', 'now')
-) returning *;
+) returning id,
+            description,
+            vendor,
+            amount,
+            effective_date,
+            budget_id,
+            expense_category_id as category_id,
+            categorization_status,
+            created_at,
+            updated_at;

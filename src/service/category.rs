@@ -1,13 +1,10 @@
 use crate::{
+    models::{
+        CreateExpenseCategory, ExpenseCategory, GetExpenseCategoryDTO, UpdateExpenseCategory,
+    },
     prelude::*,
     repository::Repository,
     util::time_util,
-    models::{
-        GetExpenseCategoryDTO,
-        ExpenseCategory,
-        CreateExpenseCategory,
-        UpdateExpenseCategory
-    }
 };
 
 pub async fn get_category(repo: &dyn Repository, id: i32) -> Result<GetExpenseCategoryDTO> {
@@ -18,14 +15,14 @@ pub async fn get_category(repo: &dyn Repository, id: i32) -> Result<GetExpenseCa
     category.total_spend_to_date = expenditures.iter().map(|e| e.amount as i64).sum();
     let dto = GetExpenseCategoryDTO {
         category,
-        expenditures
+        expenditures,
     };
     Ok(dto)
 }
 
 pub async fn create_category(
     repo: &dyn Repository,
-    create_category: CreateExpenseCategory
+    create_category: CreateExpenseCategory,
 ) -> Result<ExpenseCategory> {
     repo.create_expense_category(create_category).await
 }
@@ -33,14 +30,11 @@ pub async fn create_category(
 pub async fn update_category(
     repo: &dyn Repository,
     id: i32,
-    update_category: UpdateExpenseCategory
+    update_category: UpdateExpenseCategory,
 ) -> Result<()> {
     repo.update_expense_category(id, update_category).await
 }
 
-pub async fn delete(
-    repo: &dyn Repository,
-    id: i32
-) -> Result<()> {
+pub async fn delete(repo: &dyn Repository, id: i32) -> Result<()> {
     repo.delete_expense_category(id).await
 }

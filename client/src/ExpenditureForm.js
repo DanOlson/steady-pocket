@@ -46,11 +46,13 @@ export default function ExpenditureForm (props) {
 
   return (
     <div className="new-expenditure">
-      <ExpenseCategory
-        categoryName={category.name}
-        amount={category.amount / 100.0}
-        totalSpend={category.total_spend_to_date / 100.0}
-      />
+      {category && category.id && (
+        <ExpenseCategory
+          categoryName={category.name}
+          amount={category.amount / 100.0}
+          totalSpend={category.total_spend_to_date / 100.0}
+        />
+      )}
       <form className="new-expenditure-form" onSubmit={handleSubmit}>
         <div className="form-group row">
           <label className="col-form-label col-sm-2">Description</label>

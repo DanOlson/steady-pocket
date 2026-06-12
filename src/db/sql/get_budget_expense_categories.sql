@@ -8,5 +8,5 @@ from expense_categories
 left join expenditures
   on expenditures.expense_category_id = expense_categories.id
   and effective_date >= ?
-where budget_id = ?
+where expense_categories.budget_id = ?
 group by expense_categories.id;

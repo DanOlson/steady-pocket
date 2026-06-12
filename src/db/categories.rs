@@ -1,34 +1,27 @@
 use crate::{
-    prelude::*,
     db::Db,
-    models::{
-        CreateExpenseCategory,
-        UpdateExpenseCategory,
-        ExpenseCategory,
-    }
+    models::{CreateExpenseCategory, ExpenseCategory, UpdateExpenseCategory},
+    prelude::*,
 };
-use sqlx::{
-    sqlite::SqliteRow,
-    Row,
-    QueryBuilder
-};
+use sqlx::{sqlite::SqliteRow, QueryBuilder, Row};
 
 impl Db {
-    pub async fn create_category(&self, category: CreateExpenseCategory) -> Result<ExpenseCategory> {
+    pub async fn create_category(
+        &self,
+        category: CreateExpenseCategory,
+    ) -> Result<ExpenseCategory> {
         let q = include_str!("sql/create_expense_category.sql");
         let category = sqlx::query(q)
             .bind(category.name)
             .bind(category.amount)
             .bind(category.budget_id)
-            .map(|row: SqliteRow| {
-                ExpenseCategory {
-                    id: row.get("id"),
-                    name: row.get("name"),
-                    amount: row.get("amount"),
-                    budget_id: row.get("budget_id"),
-                    total_spend_to_date: 0,
-                    expenditure_ids: vec![]
-                }
+            .map(|row: SqliteRow| ExpenseCategory {
+                id: row.get("id"),
+                name: row.get("name"),
+                amount: row.get("amount"),
+                budget_id: row.get("budget_id"),
+                total_spend_to_date: 0,
+                expenditure_ids: vec![],
             })
             .fetch_one(&self.0)
             .await?;
@@ -53,10 +46,7 @@ impl Db {
         builder.push(" where id = ");
         builder.push_bind(id);
 
-        builder
-            .build()
-            .execute(&self.0)
-            .await?;
+        builder.build().execute(&self.0).await?;
 
         Ok(())
     }
@@ -66,7 +56,8 @@ impl Db {
         let category = sqlx::query(q)
             .bind(id)
             .map(|row: SqliteRow| {
-                let expenditure_ids: Vec<i32> = row.get::<String, &str>("expenditure_ids")
+                let expenditure_ids: Vec<i32> = row
+                    .get::<String, &str>("expenditure_ids")
                     .split(' ')
                     .filter_map(|n| n.parse::<i32>().ok())
                     .collect();
@@ -98,7 +89,8 @@ impl Db {
             .bind(since)
             .bind(budget_id)
             .map(|row: SqliteRow| {
-                let expenditure_ids: Vec<i32> = row.get::<String, &str>("expenditure_ids")
+                let expenditure_ids: Vec<i32> = row
+                    .get::<String, &str>("expenditure_ids")
                     .split(' ')
                     .filter_map(|n| n.parse::<i32>().ok())
                     .collect();
@@ -120,10 +112,7 @@ impl Db {
 
     pub async fn delete_category(&self, id: i32) -> Result<()> {
         let q = include_str!("sql/delete_category.sql");
-        sqlx::query(q)
-            .bind(id)
-            .execute(&self.0)
-            .await?;
+        sqlx::query(q).bind(id).execute(&self.0).await?;
         Ok(())
     }
 }

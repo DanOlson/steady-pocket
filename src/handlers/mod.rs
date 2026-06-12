@@ -1,49 +1,49 @@
-use std::sync::Arc;
-use actix_web::{
-    web::{scope, Data, ServiceConfig},
-    dev::{ServiceRequest, ServiceResponse, fn_service},
-};
-use actix_files as fs;
 use crate::repository::Repository;
+use actix_files as fs;
+use actix_web::{
+    dev::{fn_service, ServiceRequest, ServiceResponse},
+    web::{scope, Data, ServiceConfig},
+};
+use std::sync::Arc;
 
 mod budgets;
-mod expense_categories;
 mod expenditures;
+mod expense_categories;
 pub use budgets::*;
-pub use expense_categories::*;
 pub use expenditures::*;
+pub use expense_categories::*;
 
 pub fn api_config(repo: impl Repository + 'static) -> impl FnOnce(&mut ServiceConfig) {
     let repo_arc: Arc<dyn Repository> = Arc::new(repo);
     let repo_data: Data<dyn Repository> = Data::from(repo_arc);
     |cfg: &mut ServiceConfig| {
         cfg.app_data(repo_data)
-        .service(
-    scope("/api/v1")
-                .service(get_budgets)
-                .service(get_budget)
-                .service(create_budget)
-                .service(update_budget)
-                .service(get_category)
-                .service(create_category)
-                .service(update_category)
-                .service(delete_category)
-                .service(create_expenditure)
-                .service(update_expenditure)
-                .service(delete_expenditure)
-                .service(get_expenditures)
-                .service(get_expenditure)
-        )
-        .service(
-            fs::Files::new("/", "./client/build")
-                .index_file("index.html")
-                .default_handler(fn_service(|req: ServiceRequest| async {
-                    let (req, _) = req.into_parts();
-                    let file = fs::NamedFile::open_async("./client/build/index.html").await?;
-                    let res = file.into_response(&req);
-                    Ok(ServiceResponse::new(req, res))
-                }))
-        );
+            .service(
+                scope("/api/v1")
+                    .service(get_budgets)
+                    .service(get_budget)
+                    .service(create_budget)
+                    .service(update_budget)
+                    .service(get_category)
+                    .service(create_category)
+                    .service(update_category)
+                    .service(delete_category)
+                    .service(create_expenditure)
+                    .service(update_expenditure)
+                    .service(delete_expenditure)
+                    .service(get_expenditures)
+                    .service(get_expenditure),
+            )
+            .service(
+                fs::Files::new("/", "./client/build")
+                    .index_file("index.html")
+                    .default_handler(fn_service(|req: ServiceRequest| async {
+                        let (req, _) = req.into_parts();
+                        let file = fs::NamedFile::open_async("./client/build/index.html").await?;
+                        let res = file.into_response(&req);
+                        Ok(ServiceResponse::new(req, res))
+                    })),
+            );
     }
 }
 
@@ -51,11 +51,11 @@ pub fn api_config(repo: impl Repository + 'static) -> impl FnOnce(&mut ServiceCo
 pub mod test_prelude {
     pub use super::api_config;
     pub use crate::{
+        db::{Db, MIGRATOR},
         prelude::*,
         repository::{DatabaseRepository, Repository},
-        db::{Db, MIGRATOR},
     };
-    pub use actix_web::{App, test, http::StatusCode, web::ServiceConfig};
+    pub use actix_web::{http::StatusCode, test, web::ServiceConfig, App};
     pub use sqlx::SqlitePool;
 
     pub async fn test_config_with_pool(pool: sqlx::SqlitePool) -> impl FnOnce(&mut ServiceConfig) {

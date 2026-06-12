@@ -15,9 +15,16 @@ export default function EditExpenditure () {
         return resp.expenditure
       })
       .then(expenditure => {
-        return apiClient.getCategory(expenditure.category_id)
+        if (expenditure.category_id) {
+          return apiClient.getCategory(expenditure.category_id)
+            .then(resp => setCategory(resp.category))
+        }
+        setCategory({
+          name: 'Uncategorized',
+          amount: 0,
+          total_spend_to_date: 0
+        })
       })
-      .then(resp => setCategory(resp.category))
   }, [id])
 
   function handleSubmit (updated) {

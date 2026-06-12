@@ -1,13 +1,8 @@
 use crate::{
+    models::{CreateExpenditure, ExpendituresQuery, GetExpenditureDTO, UpdateExpenditureDTO},
     prelude::*,
-    service,
     repository::Repository,
-    models::{
-        GetExpenditureDTO,
-        CreateExpenditure,
-        UpdateExpenditureDTO,
-        ExpendituresQuery
-    }
+    service,
 };
 use actix_web::{delete, get, patch, post, web, HttpResponse};
 
@@ -41,16 +36,16 @@ pub async fn get_expenditure(
 #[post("/expenditures")]
 pub async fn create_expenditure(
     repo: web::Data<dyn Repository>,
-    create_expenditure: web::Json<CreateExpenditure>
+    create_expenditure: web::Json<CreateExpenditure>,
 ) -> Result<HttpResponse> {
     let repo = repo.into_inner();
     let create_expenditure = create_expenditure.into_inner();
-    let expenditure = service::expenditure::create(
-        &*repo,
-        create_expenditure
-    ).await?;
+    let expenditure = service::expenditure::create(&*repo, create_expenditure).await?;
     let response = HttpResponse::Created()
-        .insert_header(("Location", format!("/api/v1/expenditures/{}", expenditure.id)))
+        .insert_header((
+            "Location",
+            format!("/api/v1/expenditures/{}", expenditure.id),
+        ))
         .json(expenditure);
     Ok(response)
 }
@@ -59,7 +54,7 @@ pub async fn create_expenditure(
 pub async fn update_expenditure(
     repo: web::Data<dyn Repository>,
     id: web::Path<i32>,
-    update: web::Json<UpdateExpenditureDTO>
+    update: web::Json<UpdateExpenditureDTO>,
 ) -> Result<HttpResponse> {
     let repo = repo.into_inner();
     let id = id.into_inner();
@@ -90,15 +85,13 @@ pub async fn delete_expenditure(
 mod tests {
     use crate::{
         handlers::test_prelude::*,
-        models::{Expenditure, GetExpenditureDTO}
+        models::{Expenditure, GetExpenditureDTO},
     };
 
     #[sqlx::test(migrator = "MIGRATOR", fixtures("expenditures"))]
     async fn test_get_expenditures(pool: SqlitePool) {
         let config = test_config_with_pool(pool).await;
-        let app = test::init_service(
-            App::new().configure(config)
-        ).await;
+        let app = test::init_service(App::new().configure(config)).await;
         let req = test::TestRequest::get()
             .uri("/api/v1/expenditures?expense_category_id=1")
             .insert_header(("Accept", "application/json"))
@@ -110,9 +103,7 @@ mod tests {
     #[actix_web::test]
     async fn test_get_expenditures_no_filter() {
         let config = test_config().await;
-        let app = test::init_service(
-            App::new().configure(config)
-        ).await;
+        let app = test::init_service(App::new().configure(config)).await;
         let req = test::TestRequest::get()
             .uri("/api/v1/expenditures")
             .insert_header(("Accept", "application/json"))
@@ -124,9 +115,7 @@ mod tests {
     #[sqlx::test(migrator = "MIGRATOR", fixtures("expenditures"))]
     async fn test_get_expenditure(pool: SqlitePool) {
         let config = test_config_with_pool(pool).await;
-        let app = test::init_service(
-            App::new().configure(config)
-        ).await;
+        let app = test::init_service(App::new().configure(config)).await;
         let req = test::TestRequest::get()
             .uri("/api/v1/expenditures/1")
             .insert_header(("Accept", "application/json"))
@@ -137,20 +126,23 @@ mod tests {
         assert_eq!(expenditure.description, "Waffles".to_string());
         assert_eq!(expenditure.vendor, "Kroger".to_string());
         assert_eq!(expenditure.amount, 1268);
+        assert_eq!(expenditure.budget_id, 1);
+        assert_eq!(expenditure.category_id, Some(1));
+        assert_eq!(expenditure.categorization_status, "confirmed".to_string());
     }
 
     #[sqlx::test(migrator = "MIGRATOR", fixtures("category"))]
     async fn test_create_expenditure(pool: SqlitePool) {
         let config = test_config_with_pool(pool).await;
-        let app = test::init_service(
-            App::new().configure(config)
-        ).await;
+        let app = test::init_service(App::new().configure(config)).await;
         let body = r#"{
             "amount": 12500,
             "vendor": "Kroger",
             "description": "groceries",
+            "budget_id": 1,
             "expense_category_id": 1
-        }"#.as_bytes();
+        }"#
+        .as_bytes();
         let req = test::TestRequest::post()
             .uri("/api/v1/expenditures")
             .set_payload(body)
@@ -161,22 +153,139 @@ mod tests {
         assert_eq!(expenditure.amount, 12500);
         assert_eq!(expenditure.vendor, "Kroger".to_string());
         assert_eq!(expenditure.description, "groceries".to_string());
-        assert_eq!(expenditure.category_id, 1);
+        assert_eq!(expenditure.budget_id, 1);
+        assert_eq!(expenditure.category_id, Some(1));
+        assert_eq!(expenditure.categorization_status, "confirmed".to_string());
+    }
+
+    #[sqlx::test(migrator = "MIGRATOR", fixtures("budget"))]
+    async fn test_create_uncategorized_expenditure(pool: SqlitePool) {
+        let config = test_config_with_pool(pool).await;
+        let app = test::init_service(App::new().configure(config)).await;
+        let body = r#"{
+            "amount": 12500,
+            "vendor": "Kroger",
+            "description": "groceries",
+            "budget_id": 1
+        }"#
+        .as_bytes();
+        let req = test::TestRequest::post()
+            .uri("/api/v1/expenditures")
+            .set_payload(body)
+            .insert_header(("Content-Type", "application/json"))
+            .to_request();
+        let expenditure: Expenditure = test::call_and_read_body_json(&app, req).await;
+        assert!(expenditure.id > 0);
+        assert_eq!(expenditure.budget_id, 1);
+        assert_eq!(expenditure.category_id, None);
+        assert_eq!(
+            expenditure.categorization_status,
+            "uncategorized".to_string()
+        );
+    }
+
+    #[sqlx::test(migrator = "MIGRATOR", fixtures("budget"))]
+    async fn test_create_uncategorized_expenditure_rejects_missing_budget(pool: SqlitePool) {
+        let config = test_config_with_pool(pool).await;
+        let app = test::init_service(App::new().configure(config)).await;
+        let body = r#"{
+            "amount": 12500,
+            "vendor": "Kroger",
+            "description": "groceries",
+            "budget_id": 999
+        }"#
+        .as_bytes();
+        let req = test::TestRequest::post()
+            .uri("/api/v1/expenditures")
+            .set_payload(body)
+            .insert_header(("Content-Type", "application/json"))
+            .to_request();
+        let response = test::call_service(&app, req).await;
+        assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    }
+
+    #[sqlx::test(migrator = "MIGRATOR", fixtures("category"))]
+    async fn test_create_expenditure_rejects_category_from_another_budget(pool: SqlitePool) {
+        sqlx::query("insert into budgets (id, name, budget_interval) values (2, 'Second Budget', 'monthly')")
+            .execute(&pool)
+            .await
+            .unwrap();
+        sqlx::query("insert into expense_categories (id, name, amount, budget_id, currency) values (2, 'Other', 5000, 2, 'USD')")
+            .execute(&pool)
+            .await
+            .unwrap();
+
+        let config = test_config_with_pool(pool).await;
+        let app = test::init_service(App::new().configure(config)).await;
+        let body = r#"{
+            "amount": 12500,
+            "vendor": "Kroger",
+            "description": "groceries",
+            "budget_id": 1,
+            "expense_category_id": 2
+        }"#
+        .as_bytes();
+        let req = test::TestRequest::post()
+            .uri("/api/v1/expenditures")
+            .set_payload(body)
+            .insert_header(("Content-Type", "application/json"))
+            .to_request();
+        let response = test::call_service(&app, req).await;
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    }
+
+    #[sqlx::test(migrator = "MIGRATOR", fixtures("expenditures"))]
+    async fn test_get_expenditures_for_budget(pool: SqlitePool) {
+        let config = test_config_with_pool(pool).await;
+        let app = test::init_service(App::new().configure(config)).await;
+        let req = test::TestRequest::get()
+            .uri("/api/v1/expenditures?budget_id=1")
+            .insert_header(("Accept", "application/json"))
+            .to_request();
+        let expenditures: Vec<Expenditure> = test::call_and_read_body_json(&app, req).await;
+        assert_eq!(expenditures.len(), 4);
+    }
+
+    #[sqlx::test(migrator = "MIGRATOR", fixtures("expenditures"))]
+    async fn test_get_uncategorized_expenditures_for_budget(pool: SqlitePool) {
+        let config = test_config_with_pool(pool).await;
+        let app = test::init_service(App::new().configure(config)).await;
+        let req = test::TestRequest::get()
+            .uri("/api/v1/expenditures?budget_id=1&categorized=false")
+            .insert_header(("Accept", "application/json"))
+            .to_request();
+        let expenditures: Vec<Expenditure> = test::call_and_read_body_json(&app, req).await;
+        assert_eq!(expenditures.len(), 1);
+        assert_eq!(expenditures[0].category_id, None);
+    }
+
+    #[sqlx::test(migrator = "MIGRATOR", fixtures("expenditures"))]
+    async fn test_get_categorized_expenditures_for_budget(pool: SqlitePool) {
+        let config = test_config_with_pool(pool).await;
+        let app = test::init_service(App::new().configure(config)).await;
+        let req = test::TestRequest::get()
+            .uri("/api/v1/expenditures?budget_id=1&categorized=true")
+            .insert_header(("Accept", "application/json"))
+            .to_request();
+        let expenditures: Vec<Expenditure> = test::call_and_read_body_json(&app, req).await;
+        assert_eq!(expenditures.len(), 3);
+        assert!(expenditures
+            .iter()
+            .all(|expenditure| expenditure.category_id.is_some()));
     }
 
     #[actix_web::test]
     async fn test_create_expenditure_bad_req() {
         let config = test_config().await;
-        let app = test::init_service(
-            App::new().configure(config)
-        ).await;
+        let app = test::init_service(App::new().configure(config)).await;
         let body = r#"{
             "expenditure": {
                 "vendor": "Kroger",
                 "description": "groceries",
                 "expense_category_id": 1
             }
-        }"#.as_bytes();
+        }"#
+        .as_bytes();
         let req = test::TestRequest::post()
             .uri("/api/v1/expenditures")
             .set_payload(body)
@@ -189,9 +298,7 @@ mod tests {
     #[sqlx::test(migrator = "MIGRATOR", fixtures("expenditures"))]
     async fn test_update_expenditure_amount(pool: SqlitePool) {
         let config = test_config_with_pool(pool).await;
-        let app = test::init_service(
-            App::new().configure(config)
-        ).await;
+        let app = test::init_service(App::new().configure(config)).await;
         let body = r#"{"expenditure":{"amount":1250}}"#.as_bytes();
         let req = test::TestRequest::patch()
             .uri("/api/v1/expenditures/1")
@@ -211,9 +318,7 @@ mod tests {
     #[sqlx::test(migrator = "MIGRATOR", fixtures("expenditures"))]
     async fn test_update_expenditure_description(pool: SqlitePool) {
         let config = test_config_with_pool(pool).await;
-        let app = test::init_service(
-            App::new().configure(config)
-        ).await;
+        let app = test::init_service(App::new().configure(config)).await;
         let body = r#"{"expenditure":{"description":"tasty waffles"}}"#.as_bytes();
         let req = test::TestRequest::patch()
             .uri("/api/v1/expenditures/1")
@@ -233,9 +338,7 @@ mod tests {
     #[sqlx::test(migrator = "MIGRATOR", fixtures("expenditures"))]
     async fn test_update_expenditure_vendor(pool: SqlitePool) {
         let config = test_config_with_pool(pool).await;
-        let app = test::init_service(
-            App::new().configure(config)
-        ).await;
+        let app = test::init_service(App::new().configure(config)).await;
         let body = r#"{"expenditure":{"vendor":"Denny's"}}"#.as_bytes();
         let req = test::TestRequest::patch()
             .uri("/api/v1/expenditures/1")
@@ -253,11 +356,106 @@ mod tests {
     }
 
     #[sqlx::test(migrator = "MIGRATOR", fixtures("expenditures"))]
+    async fn test_update_expenditure_category(pool: SqlitePool) {
+        let config = test_config_with_pool(pool).await;
+        let app = test::init_service(App::new().configure(config)).await;
+        let body = r#"{"expenditure":{"expense_category_id":1}}"#.as_bytes();
+        let req = test::TestRequest::patch()
+            .uri("/api/v1/expenditures/5")
+            .insert_header(("Content-Type", "application/json"))
+            .set_payload(body)
+            .to_request();
+        let response = test::call_service(&app, req).await;
+        assert_eq!(response.status(), StatusCode::NO_CONTENT);
+
+        let req = test::TestRequest::get()
+            .uri("/api/v1/expenditures/5")
+            .insert_header(("Accept", "application/json"))
+            .to_request();
+        let expenditure_dto: GetExpenditureDTO = test::call_and_read_body_json(&app, req).await;
+        assert_eq!(expenditure_dto.expenditure.category_id, Some(1));
+        assert_eq!(
+            expenditure_dto.expenditure.categorization_status,
+            "confirmed".to_string()
+        );
+    }
+
+    #[sqlx::test(migrator = "MIGRATOR", fixtures("expenditures"))]
+    async fn test_update_expenditure_rejects_category_from_another_budget(pool: SqlitePool) {
+        sqlx::query("insert into budgets (id, name, budget_interval) values (2, 'Second Budget', 'monthly')")
+            .execute(&pool)
+            .await
+            .unwrap();
+        sqlx::query("insert into expense_categories (id, name, amount, budget_id, currency) values (2, 'Other', 5000, 2, 'USD')")
+            .execute(&pool)
+            .await
+            .unwrap();
+
+        let config = test_config_with_pool(pool).await;
+        let app = test::init_service(App::new().configure(config)).await;
+        let body = r#"{"expenditure":{"expense_category_id":2}}"#.as_bytes();
+        let req = test::TestRequest::patch()
+            .uri("/api/v1/expenditures/1")
+            .insert_header(("Content-Type", "application/json"))
+            .set_payload(body)
+            .to_request();
+        let response = test::call_service(&app, req).await;
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    }
+
+    #[sqlx::test(migrator = "MIGRATOR", fixtures("expenditures"))]
+    async fn test_update_expenditure_clears_category(pool: SqlitePool) {
+        let config = test_config_with_pool(pool).await;
+        let app = test::init_service(App::new().configure(config)).await;
+        let body = r#"{"expenditure":{"expense_category_id":null}}"#.as_bytes();
+        let req = test::TestRequest::patch()
+            .uri("/api/v1/expenditures/1")
+            .insert_header(("Content-Type", "application/json"))
+            .set_payload(body)
+            .to_request();
+        let response = test::call_service(&app, req).await;
+        assert_eq!(response.status(), StatusCode::NO_CONTENT);
+
+        let req = test::TestRequest::get()
+            .uri("/api/v1/expenditures/1")
+            .insert_header(("Accept", "application/json"))
+            .to_request();
+        let expenditure_dto: GetExpenditureDTO = test::call_and_read_body_json(&app, req).await;
+        assert_eq!(expenditure_dto.expenditure.category_id, None);
+        assert_eq!(
+            expenditure_dto.expenditure.categorization_status,
+            "uncategorized".to_string()
+        );
+    }
+
+    #[sqlx::test(migrator = "MIGRATOR", fixtures("expenditures"))]
+    async fn test_update_expenditure_ignores_direct_categorization_status(pool: SqlitePool) {
+        let config = test_config_with_pool(pool).await;
+        let app = test::init_service(App::new().configure(config)).await;
+        let body = r#"{"expenditure":{"categorization_status":"uncategorized"}}"#.as_bytes();
+        let req = test::TestRequest::patch()
+            .uri("/api/v1/expenditures/1")
+            .insert_header(("Content-Type", "application/json"))
+            .set_payload(body)
+            .to_request();
+        let response = test::call_service(&app, req).await;
+        assert_eq!(response.status(), StatusCode::NO_CONTENT);
+
+        let req = test::TestRequest::get()
+            .uri("/api/v1/expenditures/1")
+            .insert_header(("Accept", "application/json"))
+            .to_request();
+        let expenditure_dto: GetExpenditureDTO = test::call_and_read_body_json(&app, req).await;
+        assert_eq!(
+            expenditure_dto.expenditure.categorization_status,
+            "confirmed".to_string()
+        );
+    }
+
+    #[sqlx::test(migrator = "MIGRATOR", fixtures("expenditures"))]
     async fn test_delete_expenditure(pool: SqlitePool) {
         let config = test_config_with_pool(pool).await;
-        let app = test::init_service(
-            App::new().configure(config)
-        ).await;
+        let app = test::init_service(App::new().configure(config)).await;
         let req = test::TestRequest::delete()
             .uri("/api/v1/expenditures/1")
             .insert_header(("Content-Type", "application/json"))

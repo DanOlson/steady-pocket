@@ -1,21 +1,24 @@
 use crate::{
+    models::{CreateExpenseCategoryDTO, UpdateExpenseCategoryDTO},
     prelude::*,
-    service,
     repository::Repository,
-    models::{CreateExpenseCategoryDTO, UpdateExpenseCategoryDTO}
+    service,
 };
-use actix_web::{web, delete, get, patch, post, HttpResponse};
+use actix_web::{delete, get, patch, post, web, HttpResponse};
 
 #[post("/expense_categories")]
 pub async fn create_category(
     repo: web::Data<dyn Repository>,
-    category: web::Json<CreateExpenseCategoryDTO>
+    category: web::Json<CreateExpenseCategoryDTO>,
 ) -> Result<HttpResponse> {
     let category = category.into_inner().category;
     let repo = repo.into_inner();
     let category = service::category::create_category(&*repo, category).await?;
     let response = HttpResponse::Created()
-        .insert_header(("Location", format!("/api/v1/expense_categories/{}", category.id)))
+        .insert_header((
+            "Location",
+            format!("/api/v1/expense_categories/{}", category.id),
+        ))
         .json(category);
     Ok(response)
 }
@@ -24,7 +27,7 @@ pub async fn create_category(
 pub async fn update_category(
     repo: web::Data<dyn Repository>,
     category: web::Json<UpdateExpenseCategoryDTO>,
-    id: web::Path<i32>
+    id: web::Path<i32>,
 ) -> Result<HttpResponse> {
     let repo = repo.into_inner();
     let category = category.into_inner().category;
@@ -39,7 +42,7 @@ pub async fn update_category(
 #[get("/expense_categories/{id}")]
 pub async fn get_category(
     repo: web::Data<dyn Repository>,
-    id: web::Path<i32>
+    id: web::Path<i32>,
 ) -> Result<HttpResponse> {
     let repo = repo.into_inner();
     let id = id.into_inner();
@@ -51,7 +54,7 @@ pub async fn get_category(
 #[delete("/expense_categories/{id}")]
 pub async fn delete_category(
     repo: web::Data<dyn Repository>,
-    id: web::Path<i32>
+    id: web::Path<i32>,
 ) -> Result<HttpResponse> {
     let repo = repo.into_inner();
     let id = id.into_inner();
@@ -65,22 +68,21 @@ pub async fn delete_category(
 mod tests {
     use crate::{
         handlers::test_prelude::*,
-        models::{ExpenseCategory, GetExpenseCategoryDTO}
+        models::{ExpenseCategory, GetExpenseCategoryDTO},
     };
 
     #[sqlx::test(migrator = "MIGRATOR", fixtures("budget"))]
     async fn test_create_category(pool: SqlitePool) {
         let config = test_config_with_pool(pool).await;
-        let app = test::init_service(
-            App::new().configure(config)
-        ).await;
+        let app = test::init_service(App::new().configure(config)).await;
         let body = r#"{
             "category": {
                 "name": "Housing",
                 "amount": 200000,
                 "budget_id": 1
             }
-        }"#.as_bytes();
+        }"#
+        .as_bytes();
         let req = test::TestRequest::post()
             .uri("/api/v1/expense_categories")
             .insert_header(("Content-Type", "application/json"))
@@ -96,9 +98,7 @@ mod tests {
     #[sqlx::test(migrator = "MIGRATOR", fixtures("category"))]
     async fn test_update_category_name(pool: SqlitePool) {
         let config = test_config_with_pool(pool).await;
-        let app = test::init_service(
-            App::new().configure(config)
-        ).await;
+        let app = test::init_service(App::new().configure(config)).await;
         let body = r#"{"category":{"name":"Mortgage Payment"}}"#.as_bytes();
         let req = test::TestRequest::patch()
             .uri("/api/v1/expense_categories/1")
@@ -112,9 +112,7 @@ mod tests {
     #[sqlx::test(migrator = "MIGRATOR", fixtures("category"))]
     async fn test_update_category_amount(pool: SqlitePool) {
         let config = test_config_with_pool(pool).await;
-        let app = test::init_service(
-            App::new().configure(config)
-        ).await;
+        let app = test::init_service(App::new().configure(config)).await;
         let body = r#"{"category":{"amount":200000}}"#.as_bytes();
         let req = test::TestRequest::patch()
             .uri("/api/v1/expense_categories/1")
@@ -128,9 +126,7 @@ mod tests {
     #[sqlx::test(migrator = "MIGRATOR", fixtures("category"))]
     async fn test_update_category_name_and_amount(pool: SqlitePool) {
         let config = test_config_with_pool(pool).await;
-        let app = test::init_service(
-            App::new().configure(config)
-        ).await;
+        let app = test::init_service(App::new().configure(config)).await;
         let body = r#"{"category":{"name":"Cabbage","amount":250000}}"#.as_bytes();
         let req = test::TestRequest::patch()
             .uri("/api/v1/expense_categories/1")
@@ -144,9 +140,7 @@ mod tests {
     #[sqlx::test(migrator = "MIGRATOR", fixtures("expenditures"))]
     async fn test_get_category(pool: SqlitePool) {
         let config = test_config_with_pool(pool).await;
-        let app = test::init_service(
-            App::new().configure(config)
-        ).await;
+        let app = test::init_service(App::new().configure(config)).await;
         let req = test::TestRequest::get()
             .uri("/api/v1/expense_categories/1")
             .to_request();
@@ -160,9 +154,7 @@ mod tests {
 
     #[actix_web::test]
     async fn test_get_category_not_found() {
-        let app = test::init_service(
-            App::new().configure(test_config().await)
-        ).await;
+        let app = test::init_service(App::new().configure(test_config().await)).await;
         let req = test::TestRequest::get()
             .uri("/api/v1/expense_categories/1337")
             .to_request();
@@ -173,9 +165,7 @@ mod tests {
     #[sqlx::test(migrator = "MIGRATOR", fixtures("category"))]
     async fn test_delete_category(pool: SqlitePool) {
         let conf = test_config_with_pool(pool).await;
-        let app = test::init_service(
-            App::new().configure(conf)
-        ).await;
+        let app = test::init_service(App::new().configure(conf)).await;
         let req = test::TestRequest::delete()
             .uri("/api/v1/expense_categories/1")
             .to_request();

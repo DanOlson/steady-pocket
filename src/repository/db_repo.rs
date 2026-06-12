@@ -1,22 +1,12 @@
-use async_trait::async_trait;
 use super::{
-    Result,
-    Repository,
-    Db,
-    Budget,
-    CreateBudget,
-    UpdateBudget,
-    ExpenseCategory,
-    CreateExpenseCategory,
-    UpdateExpenseCategory,
-    Expenditure,
-    CreateExpenditure,
-    UpdateExpenditure,
+    Budget, CreateBudget, CreateExpenditure, CreateExpenseCategory, Db, Expenditure,
+    ExpenseCategory, Repository, Result, UpdateBudget, UpdateExpenditure, UpdateExpenseCategory,
 };
+use async_trait::async_trait;
 
 #[derive(Debug, Clone)]
 pub struct DatabaseRepository {
-    db: Db
+    db: Db,
 }
 
 impl DatabaseRepository {
@@ -51,11 +41,18 @@ impl Repository for DatabaseRepository {
         self.db.get_categories(budget_id, since).await
     }
 
-    async fn create_expense_category(&self, category: CreateExpenseCategory) -> Result<ExpenseCategory> {
+    async fn create_expense_category(
+        &self,
+        category: CreateExpenseCategory,
+    ) -> Result<ExpenseCategory> {
         self.db.create_category(category).await
     }
 
-    async fn update_expense_category(&self, id: i32, category: UpdateExpenseCategory) -> Result<()> {
+    async fn update_expense_category(
+        &self,
+        id: i32,
+        category: UpdateExpenseCategory,
+    ) -> Result<()> {
         self.db.update_category(id, category).await
     }
 
@@ -69,6 +66,17 @@ impl Repository for DatabaseRepository {
 
     async fn expenditures(&self, category_ids: &[i32], since: i64) -> Result<Vec<Expenditure>> {
         self.db.get_expenditures(category_ids, since).await
+    }
+
+    async fn budget_expenditures(
+        &self,
+        budget_id: i32,
+        since: i64,
+        categorized: Option<bool>,
+    ) -> Result<Vec<Expenditure>> {
+        self.db
+            .get_budget_expenditures(budget_id, since, categorized)
+            .await
     }
 
     async fn expenditures_since(&self, category_id: i32, since: i64) -> Result<Vec<Expenditure>> {

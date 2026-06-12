@@ -1,18 +1,18 @@
-mod prelude;
 mod config;
-mod models;
 mod db;
 mod errors;
 mod handlers;
-mod service;
+mod models;
+mod prelude;
 mod repository;
+mod service;
 mod util;
 
 use crate::config::AppConfig;
 use crate::prelude::*;
-use db::Db;
 use ::config::Config;
 use actix_web::{App, HttpServer};
+use db::Db;
 use dotenv::dotenv;
 use handlers::*;
 use repository::*;

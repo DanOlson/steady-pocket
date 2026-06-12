@@ -14,14 +14,22 @@ export default function NewExpenditure () {
   const [category, setCategory] = useState({})
 
   useEffect(() => {
-    apiClient.getCategory(categoryId)
-      .then(json => {
-        setCategory(json.category)
-      })
+    if (categoryId) {
+      apiClient.getCategory(categoryId)
+        .then(json => {
+          setCategory(json.category)
+        })
+    } else {
+      setCategory({})
+    }
   }, [budgetId, categoryId])
 
   function handleSubmit (expenditure) {
-    return apiClient.createExpenditure({ ...expenditure, expenseCategoryId: category.id })
+    return apiClient.createExpenditure({
+      ...expenditure,
+      budgetId: Number(budgetId),
+      expenseCategoryId: category.id
+    })
   }
 
   return (

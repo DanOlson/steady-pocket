@@ -1,11 +1,7 @@
 use crate::{
-    prelude::*,
     db::Db,
-    models::{
-        Budget,
-        CreateBudget,
-        UpdateBudget
-    }
+    models::{Budget, CreateBudget, UpdateBudget},
+    prelude::*,
 };
 use sqlx::{sqlite::SqliteRow, Row};
 
@@ -13,12 +9,10 @@ impl Db {
     pub async fn get_budgets(&self) -> Result<Vec<Budget>> {
         let q = include_str!("sql/get_budgets.sql");
         let budgets = sqlx::query(q)
-            .map(|row: SqliteRow| {
-                Budget {
-                    id: row.get("id"),
-                    name: row.get("name"),
-                    interval_name: row.get("budget_interval")
-                }
+            .map(|row: SqliteRow| Budget {
+                id: row.get("id"),
+                name: row.get("name"),
+                interval_name: row.get("budget_interval"),
             })
             .fetch_all(&self.0)
             .await?;
@@ -30,12 +24,10 @@ impl Db {
         let q = include_str!("sql/get_budget.sql");
         let budget = sqlx::query(q)
             .bind(budget_id)
-            .map(|row: SqliteRow| {
-                Budget {
-                    id: row.get("id"),
-                    name: row.get("name"),
-                    interval_name: row.get("interval_name"),
-                }
+            .map(|row: SqliteRow| Budget {
+                id: row.get("id"),
+                name: row.get("name"),
+                interval_name: row.get("interval_name"),
             })
             .fetch_one(&self.0)
             .await?;
@@ -48,12 +40,10 @@ impl Db {
         let budget = sqlx::query(q)
             .bind(budget.name)
             .bind(budget.interval_name)
-            .map(|row: SqliteRow| {
-                Budget {
-                    id: row.get::<i32, &str>("id"),
-                    name: row.get("name"),
-                    interval_name: row.get("budget_interval")
-                }
+            .map(|row: SqliteRow| Budget {
+                id: row.get::<i32, &str>("id"),
+                name: row.get("name"),
+                interval_name: row.get("budget_interval"),
             })
             .fetch_one(&self.0)
             .await?;

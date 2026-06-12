@@ -39,17 +39,22 @@ With the client app built, you can visit `http::localhost:8081/index.html`
 
 ### Backend
 
-To build the backend API app on MacOS, you need to have a cross compilation toolchain for arm-unknown-linux-gnueabihf instructions (targeting Raspberry Pi Zero). You can get one here:
+To build the backend API app on MacOS, you need to have a cross compilation
+toolchain for arm-unknown-linux-gnueabihf instructions (targeting Raspberry Pi
+Zero). You can get one here:
 
 https://thinkski.github.io/osx-arm-linux-toolchains/
 
-With the toolchain available, and assuming it's in your `/Applications` directory, you can build the app as follows:
+With the toolchain available, and assuming it's in your `/Applications`
+directory, you can build the app as follows:
 
 ```bash
 ./script/backend/build.sh
 ```
 
-Cargo needs to know the location of the linker from the toolchain. If you don't have the toolchain in `/Applications`, update the `.cargo/config` to correctly reference the linker.
+Cargo needs to know the location of the linker from the toolchain. If you don't
+have the toolchain in `/Applications`, update the `.cargo/config` to correctly
+reference the linker.
 
 Deploying the API can be done with this script:
 

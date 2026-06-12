@@ -2,3 +2,4 @@
 *.db*
 
 script/build
+.DS_Store

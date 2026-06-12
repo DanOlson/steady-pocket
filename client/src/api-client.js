@@ -6,17 +6,19 @@ function createClient (baseUrl) {
   return {
     createExpenditure (expenditure) {
       console.log(JSON.stringify(expenditure))
+      const body = {
+        amount: expenditure.amount,
+        vendor: expenditure.vendor,
+        description: expenditure.description,
+        budget_id: expenditure.budgetId,
+        expense_category_id: expenditure.expenseCategoryId
+      }
       return fetch(`/api/v1/expenditures`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          amount: expenditure.amount,
-          vendor: expenditure.vendor,
-          description: expenditure.description,
-          expense_category_id: expenditure.expenseCategoryId
-        })
+        body: JSON.stringify(body)
       })
         .then(resp => resp.json())
     },
@@ -36,7 +38,8 @@ function createClient (baseUrl) {
           expenditure: {
             vendor: expenditure.vendor,
             amount: expenditure.amount,
-            description: expenditure.description
+            description: expenditure.description,
+            expense_category_id: expenditure.expenseCategoryId
           }
         })
       })
@@ -104,5 +107,4 @@ function createClient (baseUrl) {
     }
   }
 }
-
 

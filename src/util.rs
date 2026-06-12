@@ -1,5 +1,5 @@
 pub mod time_util {
-    use chrono::{Utc, Datelike, TimeZone};
+    use chrono::{Datelike, TimeZone, Utc};
 
     pub fn start_of_current_month() -> i64 {
         let now = Utc::now();
