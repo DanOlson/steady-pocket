@@ -26,14 +26,35 @@ cargo watch -x run
 
 The app will run on port 8081
 
-### Building the frontend
+### Running the frontend
+
+The client is a React app built with [Vite](https://vite.dev). For development
+with hot reloading:
+
+```bash
+cd ./client
+npm install
+npm run dev
+```
+
+The dev server runs on port 3001 and proxies `/api` requests to the backend
+on port 8081, so start the API first.
+
+Alternatively, build the static bundle and let the API serve it:
 
 ```bash
 cd ./client
 npm run build
 ```
 
-With the client app built, you can visit `http::localhost:8081/index.html`
+With the client app built, you can visit `http://localhost:8081/`
+
+Run the frontend tests (Vitest) with:
+
+```bash
+cd ./client
+npm test
+```
 
 ## Build & Deployment
 
