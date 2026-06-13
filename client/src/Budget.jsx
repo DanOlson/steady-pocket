@@ -4,7 +4,7 @@ import ExpenseCategory from './ExpenseCategory'
 import Gauge from './Gauge'
 import apiClient from './api-client'
 import NewExpenditureLink from './NewExpenditureLink'
-import { format } from 'd3-format'
+import { formatCurrency } from './format'
 import './Budget.css'
 
 export default function () {
@@ -63,13 +63,13 @@ export default function () {
           max={totalBudgeted}
           value={totalSpend}
           label="Total Spend"
-          units={`out of ${format("$,")(totalBudgeted)}`}
+          units={`out of ${formatCurrency(totalBudgeted)}`}
         />
       </div>
       {uncategorized.length > 0 && (
         <div className="uncategorized-expenditures">
           <h3>Uncategorized</h3>
-          <p>{format("$,")(uncategorizedSpend)} needs category review.</p>
+          <p>{formatCurrency(uncategorizedSpend)} needs category review.</p>
           <table className="table table-hover">
             <thead>
               <tr>
@@ -83,7 +83,7 @@ export default function () {
             <tbody>
               {uncategorized.map(expenditure => (
                 <tr key={expenditure.id}>
-                  <td>{format("$,")(expenditure.amount / 100.0)}</td>
+                  <td>{formatCurrency(expenditure.amount / 100.0)}</td>
                   <td>{expenditure.description}</td>
                   <td>{expenditure.vendor}</td>
                   <td>

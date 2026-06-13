@@ -1,10 +1,10 @@
 import React, { useState } from 'react'
-import { Redirect } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import BudgetLink from './BudgetLink'
 
 export default function ExpenseCategoryForm ({ budgetId, headingText, name, amount, onSubmit }) {
-  const [success, setSuccess] = useState(false)
   const [category, setCategory] = useState({ name, amount, budgetId })
+  const navigate = useNavigate()
 
   function setName(e) {
     setCategory({
@@ -23,11 +23,7 @@ export default function ExpenseCategoryForm ({ budgetId, headingText, name, amou
   function handleSubmit(e) {
     e.preventDefault()
     onSubmit(category)
-      .then(() => setSuccess(true))
-  }
-
-  if (success) {
-    return <Redirect to={`/budgets/${budgetId}`} />
+      .then(() => navigate(`/budgets/${budgetId}`))
   }
 
   return (

@@ -1,6 +1,6 @@
 import React from 'react'
 import Gauge from './Gauge'
-import { format } from 'd3-format'
+import { formatCurrency } from './format'
 
 export default function ExpenseCategory ({ categoryName, amount, totalSpend, children }) {
   return (
@@ -9,7 +9,7 @@ export default function ExpenseCategory ({ categoryName, amount, totalSpend, chi
         value={totalSpend}
         max={amount}
         label={categoryName}
-        units={format('$,')(amount)}
+        units={formatCurrency(amount)}
       />
       {children}
     </div>

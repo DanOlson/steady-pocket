@@ -1,8 +1,6 @@
-const baseUrl = 'localhost:3001'
+export default createClient()
 
-export default createClient(baseUrl)
-
-function createClient (baseUrl) {
+function createClient () {
   return {
     createExpenditure (expenditure) {
       console.log(JSON.stringify(expenditure))

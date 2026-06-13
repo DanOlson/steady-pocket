@@ -1,14 +1,10 @@
 import React, { useEffect, useState } from 'react'
-import {
-  Link,
-  useRouteMatch
-} from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import './BudgetList.css'
 import apiClient from './api-client'
 
 export default function BudgetList () {
   const [budgets, setBudgets] = useState([])
-  const match = useRouteMatch()
 
   useEffect(() => {
     apiClient.getBudgets()
@@ -25,7 +21,7 @@ export default function BudgetList () {
           budgets.map((budget, idx) => {
             return (
               <li key={idx}>
-                <Link to={`${match.url}/${budget.id}`}>{budget.name}</Link>
+                <Link to={`/budgets/${budget.id}`}>{budget.name}</Link>
               </li>
             )
           })

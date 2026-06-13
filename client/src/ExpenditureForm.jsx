@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Redirect } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import BudgetLink from './BudgetLink'
 import ExpenseCategory from './ExpenseCategory'
 import './Expenditure.css'
@@ -15,13 +15,13 @@ export default function ExpenditureForm (props) {
   } = props
 
   const [expenditure, setExpenditure] = useState({ vendor, amount, description })
-  const [success, setSuccess] = useState(false)
+  const navigate = useNavigate()
 
   function handleSubmit (e) {
     e.preventDefault()
     if (expenditure.vendor && expenditure.amount && expenditure.description) {
       onSubmit(expenditure)
-        .then(() => setSuccess(true))
+        .then(() => navigate(`/budgets/${budgetId}`))
     }
   }
 
@@ -38,10 +38,6 @@ export default function ExpenditureForm (props) {
   function setVendor(e) {
     const vendor = e.target.value
     setExpenditure({ ...expenditure, vendor })
-  }
-
-  if (success) {
-    return <Redirect to={`/budgets/${budgetId}`} />
   }
 
   return (

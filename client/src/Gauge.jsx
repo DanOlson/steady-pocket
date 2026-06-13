@@ -1,7 +1,7 @@
 import React from 'react'
 import { arc } from 'd3-shape'
 import { scaleLinear } from 'd3-scale'
-import { format } from 'd3-format'
+import { formatCurrency } from './format'
 
 export default function Gauge ({
   value=50,
@@ -109,7 +109,7 @@ export default function Gauge ({
         fontWeight: "900",
         fontFeatureSettings: "'zero', 'tnum' 1",
       }}>
-        {format("$,")(value)}
+        {formatCurrency(value)}
       </div>
 
       {!!label && (

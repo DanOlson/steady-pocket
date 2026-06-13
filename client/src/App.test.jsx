@@ -1,9 +1,19 @@
-import React from 'react';
-import { render } from '@testing-library/react';
-import App from './App';
+import React from 'react'
+import { render, screen } from '@testing-library/react'
+import { vi } from 'vitest'
+import App from './App'
 
-test('renders learn react link', () => {
-  const { getByText } = render(<App />);
-  const linkElement = getByText(/learn react/i);
-  expect(linkElement).toBeInTheDocument();
-});
+beforeEach(() => {
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+    json: () => Promise.resolve({ budgets: [] })
+  }))
+})
+
+afterEach(() => {
+  vi.unstubAllGlobals()
+})
+
+test('renders the budgets nav link', async () => {
+  render(<App />)
+  expect(await screen.findByRole('link', { name: /budgets/i })).toBeInTheDocument()
+})

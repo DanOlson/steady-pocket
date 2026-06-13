@@ -1,7 +1,7 @@
 import React from 'react'
 import EditExpenditureLink from './EditExpenditureLink'
 import DeleteExpenditureLink from './DeleteExpenditureLink'
-import { format } from 'd3-format'
+import { formatCurrency } from './format'
 
 export default function Expenditures ({ budgetId, expenditures, onDelete }) {
   return (
@@ -20,7 +20,7 @@ export default function Expenditures ({ budgetId, expenditures, onDelete }) {
           return (
             <tr>
               <td clasName="expenditure-date">{expenditure.created_at}</td>
-              <td className="expenditure-amount">{format("$,")(expenditure.amount / 100.0)}</td>
+              <td className="expenditure-amount">{formatCurrency(expenditure.amount / 100.0)}</td>
               <td className="expenditure-desc">{expenditure.description}</td>
               <td className="expenditure-vendor">{expenditure.vendor}</td>
               <td className="expenditure-actions">
