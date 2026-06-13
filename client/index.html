@@ -12,11 +12,17 @@
     <title>Steady Pocket</title>
     <script>
       // Apply a persisted theme choice before first paint to avoid a flash
-      // of the wrong scheme. Kept in sync by the ThemeToggle component.
+      // of the wrong scheme, pinning the theme-color metas so browser
+      // chrome matches a forced scheme. Mirrors applyTheme in src/theme.js
+      // - keep the two in sync.
       (function () {
         var theme = localStorage.getItem('steady-pocket-theme')
-        if (theme === 'light' || theme === 'dark') {
-          document.documentElement.setAttribute('data-theme', theme)
+        if (theme !== 'light' && theme !== 'dark') return
+        document.documentElement.setAttribute('data-theme', theme)
+        var color = theme === 'dark' ? '#121613' : '#FBFBF7'
+        var metas = document.querySelectorAll('meta[name="theme-color"]')
+        for (var i = 0; i < metas.length; i++) {
+          metas[i].setAttribute('content', color)
         }
       })()
     </script>

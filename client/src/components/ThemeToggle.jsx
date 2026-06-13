@@ -1,29 +1,16 @@
 import React, { useState } from 'react'
+import { THEME_MODES, storedTheme, applyTheme } from '../theme'
 import './ThemeToggle.css'
 
-// Cycles auto -> light -> dark. "Auto" follows the OS setting (no
-// data-theme attribute); explicit choices are persisted and applied to
-// <html> before first paint by the snippet in index.html.
-
-const MODES = ['auto', 'light', 'dark']
-const STORAGE_KEY = 'steady-pocket-theme'
+// Cycles auto -> light -> dark. See src/theme.js for the semantics.
 
 export default function ThemeToggle () {
-  const [mode, setMode] = useState(() => {
-    const stored = localStorage.getItem(STORAGE_KEY)
-    return MODES.includes(stored) ? stored : 'auto'
-  })
+  const [mode, setMode] = useState(storedTheme)
 
   function cycle () {
-    const next = MODES[(MODES.indexOf(mode) + 1) % MODES.length]
+    const next = THEME_MODES[(THEME_MODES.indexOf(mode) + 1) % THEME_MODES.length]
     setMode(next)
-    if (next === 'auto') {
-      localStorage.removeItem(STORAGE_KEY)
-      document.documentElement.removeAttribute('data-theme')
-    } else {
-      localStorage.setItem(STORAGE_KEY, next)
-      document.documentElement.setAttribute('data-theme', next)
-    }
+    applyTheme(next)
   }
 
   return (
