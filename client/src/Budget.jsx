@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import ExpenseCategory from './ExpenseCategory'
-import Gauge from './Gauge'
+import BudgetMeter from './components/BudgetMeter'
 import apiClient from './api-client'
 import NewExpenditureLink from './NewExpenditureLink'
 import { formatCurrency } from './format'
@@ -27,14 +27,15 @@ export default function () {
       })
   }
 
+  // All amounts in cents, as the API returns them
   const totals = categories.reduce((acc, category) => {
-    acc.amount = (acc.amount || 0) + category.amount / 100.0
-    acc.spendToDate = (acc.spendToDate || 0) + category.total_spend_to_date / 100.0
+    acc.amount = (acc.amount || 0) + category.amount
+    acc.spendToDate = (acc.spendToDate || 0) + category.total_spend_to_date
     return acc
   }, {})
-  const totalBudgeted = summary ? summary.budgeted_amount / 100.0 : totals.amount
-  const totalSpend = summary ? summary.total_spend_to_date / 100.0 : totals.spendToDate
-  const uncategorizedSpend = summary ? summary.uncategorized_spend_to_date / 100.0 : 0
+  const totalBudgeted = summary ? summary.budgeted_amount : totals.amount
+  const totalSpend = summary ? summary.total_spend_to_date : totals.spendToDate
+  const uncategorizedSpend = summary ? summary.uncategorized_spend_to_date : 0
   const uncategorized = expenditures.filter(expenditure => !expenditure.category_id)
 
   function setSelectedCategory (expenditureId, categoryId) {
@@ -59,17 +60,17 @@ export default function () {
     <div className="budget">
       <h1>{budget.name}</h1>
       <div className="summary">
-        <Gauge
-          max={totalBudgeted}
-          value={totalSpend}
-          label="Total Spend"
-          units={`out of ${formatCurrency(totalBudgeted)}`}
+        <BudgetMeter
+          hero
+          spent={totalSpend}
+          budgeted={totalBudgeted}
+          label="Total spent"
         />
       </div>
       {uncategorized.length > 0 && (
         <div className="uncategorized-expenditures">
           <h3>Uncategorized</h3>
-          <p>{formatCurrency(uncategorizedSpend)} needs category review.</p>
+          <p>{formatCurrency(uncategorizedSpend / 100)} needs category review.</p>
           <table className="table table-hover">
             <thead>
               <tr>
@@ -121,8 +122,8 @@ export default function () {
               <ExpenseCategory
                 key={idx}
                 categoryName={category.name}
-                amount={category.amount / 100.0}
-                totalSpend={category.total_spend_to_date / 100.0}
+                amount={category.amount}
+                totalSpend={category.total_spend_to_date}
               >
                 <div className="actions">
                   <Link

@@ -1,4 +1,11 @@
-import React from 'react'
+import React, { useState } from 'react'
+import BudgetMeter from './components/BudgetMeter'
+import Button from './components/Button'
+import Card from './components/Card'
+import EmptyState from './components/EmptyState'
+import ListRow from './components/ListRow'
+import Sheet from './components/Sheet'
+import { TextField, MoneyField, SelectField } from './components/Field'
 import './Design.css'
 
 // Internal design-system reference page (route: /design). Renders the
@@ -35,6 +42,8 @@ const typeScale = [
 ]
 
 export default function Design () {
+  const [sheetOpen, setSheetOpen] = useState(false)
+
   return (
     <div className="design">
       <h1>Design tokens</h1>
@@ -86,6 +95,70 @@ export default function Design () {
         <span className="design-status is-warn">Close to budget</span>
         <span className="design-status is-over">Over +$21.00</span>
       </div>
+
+      <h2>BudgetMeter — hero</h2>
+      <BudgetMeter hero spent={91220} budgeted={180000} label="Total spent" />
+
+      <h2>BudgetMeter — compact</h2>
+      <div className="design-stack">
+        <BudgetMeter spent={28700} budgeted={62000} label="Groceries" />
+        <BudgetMeter spent={13100} budgeted={15000} label="Fun money" />
+        <BudgetMeter spent={17100} budgeted={15000} label="Dining out" />
+        <BudgetMeter spent={4500} budgeted={0} label="No budget set" />
+      </div>
+
+      <h2>Buttons</h2>
+      <div className="design-statuses">
+        <Button variant="primary">Record expense</Button>
+        <Button variant="secondary">Cancel</Button>
+        <Button variant="quiet">Edit</Button>
+        <Button variant="destructive">Delete category</Button>
+        <Button variant="primary" size="sm">Save</Button>
+      </div>
+
+      <h2>Fields</h2>
+      <TextField label="Description" name="description" defaultValue="Bulk groceries" onChange={() => {}} />
+      <MoneyField label="Amount" name="amount" defaultCents={8620} onChange={() => {}} />
+      <SelectField label="Category" name="category" defaultValue="" onChange={() => {}}>
+        <option value="">Choose a category</option>
+        <option value="1">Groceries</option>
+        <option value="2">Dining out</option>
+      </SelectField>
+
+      <h2>List rows</h2>
+      <ListRow
+        to="/design"
+        primary="Groceries"
+        secondary="Costco · Bulk groceries"
+        trailing="$86.20"
+      />
+      <ListRow
+        primary="Dining out"
+        secondary="June 9 · Taqueria"
+        trailing="$24.50"
+      />
+
+      <h2>Card</h2>
+      <Card>
+        <BudgetMeter spent={28700} budgeted={62000} label="Groceries" />
+      </Card>
+
+      <h2>Empty state</h2>
+      <EmptyState title="No expenses yet" message="Record an expense to start tracking June.">
+        <Button variant="primary">Record expense</Button>
+      </EmptyState>
+
+      <h2>Sheet</h2>
+      <Button variant="secondary" onClick={() => setSheetOpen(true)}>Open sheet</Button>
+      <Sheet open={sheetOpen} title="Delete category" onClose={() => setSheetOpen(false)}>
+        <p>Deleting <strong>Dining out</strong> removes its budget. Its expenses keep their history.</p>
+        <Button variant="destructive" className="ui-btn-block" onClick={() => setSheetOpen(false)}>
+          Delete category
+        </Button>
+        <Button variant="quiet" className="ui-btn-block" onClick={() => setSheetOpen(false)}>
+          Keep it
+        </Button>
+      </Sheet>
     </div>
   )
 }

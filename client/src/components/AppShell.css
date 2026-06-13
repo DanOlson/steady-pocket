@@ -1,0 +1,25 @@
+.app-shell {
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: 0 var(--space-4);
+  text-align: left;
+}
+
+.app-shell.has-action {
+  padding-bottom: calc(var(--tap-target) + var(--space-6) + env(safe-area-inset-bottom));
+}
+
+.app-shell-action-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 5;
+  padding: var(--space-3) var(--space-4) calc(var(--space-3) + env(safe-area-inset-bottom));
+  background: linear-gradient(to top, var(--color-bg) 70%, transparent);
+}
+
+.app-shell-action-inner {
+  max-width: var(--content-max);
+  margin: 0 auto;
+}

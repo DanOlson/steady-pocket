@@ -1,0 +1,56 @@
+.sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  background: rgba(18, 22, 19, 0.5);
+}
+
+.sheet {
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: var(--space-2) var(--space-4) calc(var(--space-4) + env(safe-area-inset-bottom));
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  text-align: left;
+  animation: sheet-rise 200ms ease;
+}
+
+@keyframes sheet-rise {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.sheet-handle {
+  width: 36px;
+  height: 4px;
+  margin: 0 auto var(--space-3);
+  border-radius: 2px;
+  background: var(--color-border-strong);
+}
+
+.sheet-title {
+  margin: 0 0 var(--space-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+
+@media (min-width: 480px) {
+  .sheet-backdrop {
+    align-items: center;
+    justify-content: center;
+  }
+
+  .sheet {
+    width: 100%;
+    max-width: var(--content-max);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-md);
+  }
+}

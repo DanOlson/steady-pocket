@@ -1,0 +1,149 @@
+.budget-meter {
+  text-align: left;
+}
+
+.budget-meter-num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The bar: a ruled track with quarter marks, a fill, and the pace tick */
+.budget-meter-bar {
+  position: relative;
+  height: 14px;
+  border-bottom: 1px solid var(--color-border-strong);
+  background:
+    repeating-linear-gradient(to right,
+      transparent, transparent calc(25% - 1px),
+      var(--color-border) calc(25% - 1px), var(--color-border) 25%);
+}
+
+.budget-meter-fill {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: 0;
+  background: var(--color-spend-ok);
+  transition: width 600ms ease;
+}
+
+.budget-meter.is-warn .budget-meter-fill {
+  background: var(--color-spend-warn);
+}
+
+.budget-meter.is-over .budget-meter-fill {
+  background: var(--color-spend-over);
+}
+
+.budget-meter-pace {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  width: 2px;
+  background: var(--color-text);
+}
+
+/* Compact: label and figures above the bar */
+.budget-meter-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-3);
+  margin-bottom: var(--space-2);
+}
+
+.budget-meter-label {
+  font-weight: 500;
+}
+
+.budget-meter-figures {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.budget-meter-spent {
+  color: var(--color-text);
+  font-size: var(--text-md);
+  font-weight: 600;
+}
+
+.budget-meter.is-over .budget-meter-spent {
+  color: var(--color-spend-over);
+}
+
+/* The rubber stamp for overdrawn budgets */
+.budget-meter-stamp {
+  display: inline-block;
+  margin-left: var(--space-2);
+  padding: 2px 6px;
+  border: 1.5px solid var(--color-spend-over);
+  border-radius: var(--radius-sm);
+  color: var(--color-spend-over);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transform: rotate(-2deg);
+}
+
+.budget-meter-warn-badge {
+  margin-left: var(--space-2);
+  color: var(--color-spend-warn);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* Hero: big mono figure, taller bar, pace legend */
+.budget-meter-hero .budget-meter-bar {
+  height: 20px;
+  margin-top: var(--space-1);
+}
+
+.budget-meter-hero .budget-meter-fill {
+  top: 4px;
+  bottom: 4px;
+}
+
+.budget-meter-eyebrow {
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+
+.budget-meter-figure {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--text-2xl);
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.budget-meter-of {
+  margin: 2px 0 var(--space-4);
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.budget-meter-pace-note {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin: var(--space-2) 0 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.budget-meter-pace-key {
+  display: inline-block;
+  width: 2px;
+  height: 11px;
+  background: var(--color-text);
+  transform: translateY(1px);
+}

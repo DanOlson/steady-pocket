@@ -27,8 +27,8 @@ export default function ExpenseCategoryDetail () {
   return (
     <div className="expense-category-detail">
       <ExpenseCategory
-        totalSpend={category.total_spend_to_date / 100.0}
-        amount={category.amount / 100.0}
+        totalSpend={category.total_spend_to_date}
+        amount={category.amount}
         categoryName={category.name}
       >
         <Expenditures

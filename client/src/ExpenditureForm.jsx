@@ -45,8 +45,8 @@ export default function ExpenditureForm (props) {
       {category && category.id && (
         <ExpenseCategory
           categoryName={category.name}
-          amount={category.amount / 100.0}
-          totalSpend={category.total_spend_to_date / 100.0}
+          amount={category.amount}
+          totalSpend={category.total_spend_to_date}
         />
       )}
       <form className="new-expenditure-form" onSubmit={handleSubmit}>

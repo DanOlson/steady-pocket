@@ -1,15 +1,14 @@
 import React from 'react'
-import Gauge from './Gauge'
-import { formatCurrency } from './format'
+import BudgetMeter from './components/BudgetMeter'
 
+// amount and totalSpend are in cents.
 export default function ExpenseCategory ({ categoryName, amount, totalSpend, children }) {
   return (
     <div className="expense-category">
-      <Gauge
-        value={totalSpend}
-        max={amount}
+      <BudgetMeter
         label={categoryName}
-        units={formatCurrency(amount)}
+        spent={totalSpend}
+        budgeted={amount}
       />
       {children}
     </div>

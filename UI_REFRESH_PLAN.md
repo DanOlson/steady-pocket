@@ -104,7 +104,9 @@ defaults).
 **Exit criteria:** a tokens demo page renders all semantic tokens in both
 schemes; flipping the OS setting flips the app.
 
-## Phase 2 — Component library
+## Phase 2 — Component library ✅ (done 2026-06-12; the bootstrap shim
+survives until the Phase 3 screen rebuilds remove the last `.btn`/`.table`
+usage)
 
 Replace Bootstrap classes and per-page CSS with ~10 owned components, each
 token-driven and mobile-first (≥44px touch targets throughout):
