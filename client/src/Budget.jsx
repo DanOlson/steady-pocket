@@ -1,18 +1,20 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import ExpenseCategory from './ExpenseCategory'
+import AppShell from './components/AppShell'
 import BudgetMeter from './components/BudgetMeter'
+import Button from './components/Button'
+import Card from './components/Card'
+import EmptyState from './components/EmptyState'
+import { SelectField } from './components/Field'
 import apiClient from './api-client'
-import NewExpenditureLink from './NewExpenditureLink'
 import { formatCurrency } from './format'
 import './Budget.css'
 
-export default function () {
+export default function Budget () {
   const [budget, setBudget] = useState(null)
   const [categories, setCategories] = useState([])
   const [expenditures, setExpenditures] = useState([])
   const [summary, setSummary] = useState(null)
-  const [categorySelections, setCategorySelections] = useState({})
   const { id } = useParams()
 
   useEffect(fetchBudget, [id])
@@ -35,120 +37,93 @@ export default function () {
   }, {})
   const totalBudgeted = summary ? summary.budgeted_amount : totals.amount
   const totalSpend = summary ? summary.total_spend_to_date : totals.spendToDate
-  const uncategorizedSpend = summary ? summary.uncategorized_spend_to_date : 0
   const uncategorized = expenditures.filter(expenditure => !expenditure.category_id)
 
-  function setSelectedCategory (expenditureId, categoryId) {
-    setCategorySelections({
-      ...categorySelections,
-      [expenditureId]: Number(categoryId)
-    })
-  }
+  const today = new Date()
+  const monthLabel = today.toLocaleString('en-US', { month: 'long', year: 'numeric' })
+  const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate()
 
-  function categorizeExpenditure (expenditure) {
-    const expenseCategoryId = categorySelections[expenditure.id]
-    if (!expenseCategoryId) {
+  function fileExpenditure (expenditure, categoryId) {
+    if (!categoryId) {
       return
     }
     apiClient.updateExpenditure({
       id: expenditure.id,
-      expenseCategoryId
+      expenseCategoryId: Number(categoryId)
     }).then(fetchBudget)
   }
 
   return budget && (
-    <div className="budget">
-      <h1>{budget.name}</h1>
-      <div className="summary">
-        <BudgetMeter
-          hero
-          spent={totalSpend}
-          budgeted={totalBudgeted}
-          label="Total spent"
-        />
-      </div>
+    <AppShell
+      action={
+        <Button variant="primary" className="ui-btn-block" to={`/budgets/${id}/expenditures/new`}>
+          + Record expense
+        </Button>
+      }
+    >
+      <header className="budget-header">
+        <h1>{budget.name}</h1>
+        <p className="budget-period">{monthLabel} · Day {today.getDate()} of {daysInMonth}</p>
+      </header>
+
+      <BudgetMeter hero spent={totalSpend} budgeted={totalBudgeted} label="Total spent" />
+
       {uncategorized.length > 0 && (
-        <div className="uncategorized-expenditures">
-          <h3>Uncategorized</h3>
-          <p>{formatCurrency(uncategorizedSpend / 100)} needs category review.</p>
-          <table className="table table-hover">
-            <thead>
-              <tr>
-                <th>Amount</th>
-                <th>Description</th>
-                <th>Vendor</th>
-                <th>Category</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {uncategorized.map(expenditure => (
-                <tr key={expenditure.id}>
-                  <td>{formatCurrency(expenditure.amount / 100.0)}</td>
-                  <td>{expenditure.description}</td>
-                  <td>{expenditure.vendor}</td>
-                  <td>
-                    <select
-                      className="form-control"
-                      value={categorySelections[expenditure.id] || ''}
-                      onChange={e => setSelectedCategory(expenditure.id, e.target.value)}
-                    >
-                      <option value="">Choose category</option>
-                      {categories.map(category => (
-                        <option key={category.id} value={category.id}>{category.name}</option>
-                      ))}
-                    </select>
-                  </td>
-                  <td>
-                    <button
-                      className="btn btn-outline-primary btn-sm"
-                      type="button"
-                      onClick={() => categorizeExpenditure(expenditure)}
-                    >
-                      Save
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-      <h3>Categories</h3>
-      <div className="grid">
-        {
-          categories.map((category, idx) => {
-            return (
-              <ExpenseCategory
-                key={idx}
-                categoryName={category.name}
-                amount={category.amount}
-                totalSpend={category.total_spend_to_date}
+        <section className="budget-section">
+          <div className="budget-section-head">
+            <span>Needs filing</span>
+            <span className="budget-section-count">{uncategorized.length}</span>
+          </div>
+          {uncategorized.map(expenditure => (
+            <Card className="filing-card" key={expenditure.id}>
+              <div className="filing-line">
+                <span className="filing-amount">{formatCurrency(expenditure.amount / 100)}</span>
+                <span className="filing-desc">{expenditure.vendor} · {expenditure.description}</span>
+              </div>
+              <SelectField
+                label="Category"
+                name={`category-${expenditure.id}`}
+                defaultValue=""
+                onChange={e => fileExpenditure(expenditure, e.target.value)}
               >
-                <div className="actions">
-                  <Link
-                    className="btn btn-outline-secondary btn-sm"
-                    to={`/budgets/${id}/categories/${category.id}`}>
-                    Details
-                  </Link>
-                  <NewExpenditureLink
-                    className="btn btn-outline-primary btn-sm"
-                    categoryId={category.id}
-                    budgetId={id}>
-                    Add +
-                  </NewExpenditureLink>
-                </div>
-              </ExpenseCategory>
-            )
-          })
-        }
-        <div className="new-category">
-          <Link
-            to={`/budgets/${id}/categories/new`}
-            className="btn btn-outline-secondary"
-          >Add Category</Link>
+                <option value="">Choose a category</option>
+                {categories.map(category => (
+                  <option key={category.id} value={category.id}>{category.name}</option>
+                ))}
+              </SelectField>
+            </Card>
+          ))}
+        </section>
+      )}
+
+      <section className="budget-section">
+        <div className="budget-section-head">
+          <span>Categories</span>
+          <span>{today.toLocaleString('en-US', { month: 'long' })}</span>
         </div>
-      </div>
-    </div>
+        {categories.map(category => (
+          <Link
+            key={category.id}
+            className="budget-category-row"
+            to={`/budgets/${id}/categories/${category.id}`}
+          >
+            <BudgetMeter
+              label={category.name}
+              spent={category.total_spend_to_date}
+              budgeted={category.amount}
+            />
+          </Link>
+        ))}
+        {categories.length === 0 && (
+          <EmptyState
+            title="No categories yet"
+            message="Add a category to start budgeting this month."
+          />
+        )}
+        <Button variant="quiet" className="ui-btn-block" to={`/budgets/${id}/categories/new`}>
+          + Add a category
+        </Button>
+      </section>
+    </AppShell>
   )
 }

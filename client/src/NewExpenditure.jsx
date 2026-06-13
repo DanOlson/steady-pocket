@@ -14,14 +14,15 @@ export default function NewExpenditure () {
   const [category, setCategory] = useState({})
 
   useEffect(() => {
-    if (categoryId) {
-      apiClient.getCategory(categoryId)
-        .then(json => {
-          setCategory(json.category)
-        })
-    } else {
-      setCategory({})
+    // Without a category in the URL the expense is recorded uncategorized,
+    // to be filed from the budget screen later.
+    if (!categoryId) {
+      return
     }
+    apiClient.getCategory(categoryId)
+      .then(json => {
+        setCategory(json.category)
+      })
   }, [budgetId, categoryId])
 
   function handleSubmit (expenditure) {
