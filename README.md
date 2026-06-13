@@ -58,61 +58,20 @@ npm test
 
 ## Build & Deployment
 
-### Backend
+### Docker
 
-To build the backend API app on MacOS, you need to have a cross compilation
-toolchain for arm-unknown-linux-gnueabihf instructions (targeting Raspberry Pi
-Zero). You can get one here:
-
-https://thinkski.github.io/osx-arm-linux-toolchains/
-
-With the toolchain available, and assuming it's in your `/Applications`
-directory, you can build the app as follows:
+Build the image:
 
 ```bash
-./script/backend/build.sh
+docker build -t budget .
 ```
 
-Cargo needs to know the location of the linker from the toolchain. If you don't
-have the toolchain in `/Applications`, update the `.cargo/config` to correctly
-reference the linker.
-
-Deploying the API can be done with this script:
+Tag and push to Docker Hub (replace `<sha>` with the short commit hash from `git
+rev-parse --short HEAD`):
 
 ```bash
-./script/backend/deploy.sh
-```
-
-### Frontend
-
-Building can be done with
-
-```bash
-./script/frontend/build.sh
-```
-
-Deployment is
-
-```bash
-./script/frontend/deploy.sh
-```
-
-### Unit file for running via Systemd
-
-```
-[Unit]
-Description=Steady Pocket REST API for SmartMoney frontend
-After=network.target
-
-[Service]
-Type=simple
-User=pi
-WorkingDirectory=/opt/smart-money
-ExecStart=/opt/smart-money/steady-pocket
-Environment="SERVER_ADDR=0.0.0.0:80"
-Environment="DATABASE_URL=sqlite:./steady-pocket.db"
-Restart=on-failure
-
-[Install]
-WantedBy=multi-user.target
+docker tag budget dd1n/budget:<sha>
+docker tag budget dd1n/budget:latest
+docker push dd1n/budget:<sha>
+docker push dd1n/budget:latest
 ```

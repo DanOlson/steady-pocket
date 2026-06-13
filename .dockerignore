@@ -1,0 +1,62 @@
+# Rust build artifacts
+target/
+
+# Node.js dependencies and build artifacts
+client/node_modules/
+client/build/
+client/.env
+
+# Git and version control
+.git/
+.gitignore
+
+# Documentation and scripts
+README.md
+LICENSE.md
+script/
+
+# Development files
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+
+# Dependency directories
+node_modules/
+
+# Optional npm cache directory
+.npm
+
+# ESLint cache
+.eslintcache
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
