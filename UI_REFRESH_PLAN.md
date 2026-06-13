@@ -46,7 +46,7 @@ Three load-bearing ideas, in dependency order:
 
 ---
 
-## Phase 0 — Toolchain modernization (no visual change)
+## Phase 0 — Toolchain modernization (no visual change) ✅ (done 2026-06-12)
 
 Get off deprecated tooling first so everything after is built on current ground.
 
@@ -69,7 +69,7 @@ Get off deprecated tooling first so everything after is built on current ground.
 **Exit criteria:** app builds with Vite, deploys to the Pi via the existing
 scripts, looks roughly the same, all routes work.
 
-## Phase 1 — Design tokens and theming
+## Phase 1 — Design tokens and theming ✅ (done 2026-06-12)
 
 The foundational layer everything else consumes. Lives in
 `client/src/styles/tokens.css` (+ `base.css` for the reset and element

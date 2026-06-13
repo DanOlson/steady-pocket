@@ -7,6 +7,7 @@ import EditExpenditure from './EditExpenditure'
 import NewCategory from './NewCategory'
 import ExpenseCategoryDetail from './ExpenseCategoryDetail'
 import EditExpenseCategory from './EditExpenseCategory'
+import Design from './Design'
 
 export default function AppRoutes () {
   return (
@@ -19,6 +20,7 @@ export default function AppRoutes () {
       <Route path="/budgets/:budgetId/categories/new" element={<NewCategory />} />
       <Route path="/budgets/:budgetId/categories/:id" element={<ExpenseCategoryDetail />} />
       <Route path="/budgets/:budgetId/categories/:id/edit" element={<EditExpenseCategory />} />
+      <Route path="/design" element={<Design />} />
     </Routes>
   )
 }

@@ -1,0 +1,142 @@
+/*
+ * Design tokens — the "Ledger" direction (see prototypes/a-ledger.html and
+ * UI_REFRESH_PLAN.md).
+ *
+ * Two tiers: primitives name the raw palette; semantic tokens are what
+ * components consume. Components must only use semantic tokens, so a theme
+ * (or a future redesign) is a remapping in this file and nothing else.
+ *
+ * Theming: light is the default. Dark applies when the OS prefers it, unless
+ * a data-theme attribute on <html> overrides — data-theme="light" or
+ * data-theme="dark" forces a scheme, no attribute means follow the OS.
+ */
+
+:root {
+  color-scheme: light dark;
+
+  /* --- Primitives: palette --- */
+  --paper: #FBFBF7;
+  --white: #FFFFFF;
+  --ink-950: #121613;
+  --ink-900: #1C211C;
+  --ink-850: #1A201B;
+  --ink-700: #2B332B;
+  --ink-600: #46523F;
+  --ink-deep: #0F1410;
+  --mist-100: #E9EDE5;
+  --mist-400: #99A391;
+  --moss-600: #67705F;
+  --sage-200: #DDE0D4;
+  --sage-400: #B9BFAC;
+
+  --green-100: #E2F0E8;
+  --green-400: #66CB9C;
+  --green-700: #1E6E50;
+  --green-900: #1E3A2D;
+
+  --amber-100: #F4E8CE;
+  --amber-400: #E5B05A;
+  --amber-700: #8F5B00;
+  --amber-900: #3C2D14;
+
+  --red-100: #F9E4E2;
+  --red-300: #FF867D;
+  --red-600: #B3261E;
+  --red-900: #46221F;
+
+  /* --- Primitives: type --- */
+  --font-sans: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', monospace;
+
+  --text-xs: 0.6875rem;   /* 11px — eyebrows, stamps */
+  --text-sm: 0.8125rem;   /* 13px — captions, metadata */
+  --text-md: 1rem;        /* 16px — body */
+  --text-lg: 1.0625rem;   /* 17px — emphasized figures */
+  --text-xl: 1.75rem;     /* 28px — screen titles */
+  --text-2xl: 2.75rem;    /* 44px — hero figures */
+
+  --tracking-wide: 0.14em; /* uppercase eyebrow letterspacing */
+
+  /* --- Primitives: spacing (4px scale) --- */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+
+  /* --- Primitives: shape & layout --- */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --content-max: 27rem;     /* primary mobile-first column */
+  --content-max-wide: 64rem;
+  --tap-target: 44px;
+
+  /* --- Semantic: light (default) --- */
+  --color-bg: var(--paper);
+  --color-surface: var(--white);
+  --color-text: var(--ink-900);
+  --color-text-muted: var(--moss-600);
+  --color-border: var(--sage-200);
+  --color-border-strong: var(--sage-400);
+
+  --color-accent: var(--green-700);
+  --color-on-accent: var(--white);
+
+  --color-spend-ok: var(--green-700);
+  --color-spend-ok-soft: var(--green-100);
+  --color-spend-warn: var(--amber-700);
+  --color-spend-warn-soft: var(--amber-100);
+  --color-spend-over: var(--red-600);
+  --color-spend-over-soft: var(--red-100);
+
+  --color-focus: var(--green-700);
+}
+
+/* --- Semantic: dark --- */
+/* The two selectors below must stay identical: one applies dark when the OS
+   asks for it (and no override is set), the other when forced via attribute. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --color-bg: var(--ink-950);
+    --color-surface: var(--ink-850);
+    --color-text: var(--mist-100);
+    --color-text-muted: var(--mist-400);
+    --color-border: var(--ink-700);
+    --color-border-strong: var(--ink-600);
+
+    --color-accent: var(--green-400);
+    --color-on-accent: var(--ink-deep);
+
+    --color-spend-ok: var(--green-400);
+    --color-spend-ok-soft: var(--green-900);
+    --color-spend-warn: var(--amber-400);
+    --color-spend-warn-soft: var(--amber-900);
+    --color-spend-over: var(--red-300);
+    --color-spend-over-soft: var(--red-900);
+
+    --color-focus: var(--green-400);
+  }
+}
+
+:root[data-theme='dark'] {
+  --color-bg: var(--ink-950);
+  --color-surface: var(--ink-850);
+  --color-text: var(--mist-100);
+  --color-text-muted: var(--mist-400);
+  --color-border: var(--ink-700);
+  --color-border-strong: var(--ink-600);
+
+  --color-accent: var(--green-400);
+  --color-on-accent: var(--ink-deep);
+
+  --color-spend-ok: var(--green-400);
+  --color-spend-ok-soft: var(--green-900);
+  --color-spend-warn: var(--amber-400);
+  --color-spend-warn-soft: var(--amber-900);
+  --color-spend-over: var(--red-300);
+  --color-spend-over-soft: var(--red-900);
+
+  --color-focus: var(--green-400);
+}
