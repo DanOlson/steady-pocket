@@ -10,6 +10,16 @@
     <link rel="apple-touch-icon" href="/logo192.png" />
     <link rel="manifest" href="/manifest.json" />
     <title>Steady Pocket</title>
+    <script>
+      // Apply a persisted theme choice before first paint to avoid a flash
+      // of the wrong scheme. Kept in sync by the ThemeToggle component.
+      (function () {
+        var theme = localStorage.getItem('steady-pocket-theme')
+        if (theme === 'light' || theme === 'dark') {
+          document.documentElement.setAttribute('data-theme', theme)
+        }
+      })()
+    </script>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>

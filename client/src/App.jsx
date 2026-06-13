@@ -4,6 +4,7 @@ import {
   Link
 } from 'react-router-dom'
 import Routes from './Routes'
+import ThemeToggle from './components/ThemeToggle'
 import './App.css'
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
               </li>
             </ul>
           </nav>
+          <ThemeToggle />
         </header>
         <div className="content">
           <Routes />
