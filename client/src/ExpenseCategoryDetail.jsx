@@ -4,8 +4,10 @@ import AppShell from './components/AppShell'
 import BudgetMeter from './components/BudgetMeter'
 import Button from './components/Button'
 import EmptyState from './components/EmptyState'
+import ErrorState from './components/ErrorState'
 import ListRow from './components/ListRow'
 import Sheet from './components/Sheet'
+import Skeleton from './components/Skeleton'
 import apiClient from './api-client'
 import { formatCurrency } from './format'
 
@@ -14,6 +16,7 @@ export default function ExpenseCategoryDetail () {
   const [category, setCategory] = useState({})
   const [expenditures, setExpenditures] = useState([])
   const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const [status, setStatus] = useState('loading')
   const navigate = useNavigate()
 
   useEffect(fetchData, [id])
@@ -23,12 +26,31 @@ export default function ExpenseCategoryDetail () {
       .then(json => {
         setCategory(json.category)
         setExpenditures(json.expenditures)
+        setStatus('ready')
       })
+      .catch(() => setStatus('error'))
   }
 
   function deleteCategory () {
     apiClient.deleteCategory(category.id)
       .then(() => navigate(`/budgets/${budgetId}`))
+      .catch(() => setStatus('error'))
+  }
+
+  if (status === 'error') {
+    return (
+      <AppShell>
+        <ErrorState onRetry={fetchData} />
+      </AppShell>
+    )
+  }
+
+  if (status === 'loading') {
+    return (
+      <AppShell>
+        <Skeleton lines={6} />
+      </AppShell>
+    )
   }
 
   return (

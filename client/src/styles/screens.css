@@ -41,6 +41,13 @@
   border-bottom: 1px solid var(--color-border);
 }
 
+.form-error {
+  margin: var(--space-4) 0 0;
+  color: var(--color-spend-over);
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
 .form-actions {
   display: flex;
   flex-direction: column;

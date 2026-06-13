@@ -1,0 +1,25 @@
+.skeleton {
+  padding: var(--space-5) 0;
+}
+
+.skeleton-line {
+  height: var(--space-4);
+  margin-bottom: var(--space-4);
+  border-radius: var(--radius-sm);
+  background: var(--color-border);
+  animation: skeleton-pulse 1.2s ease-in-out infinite;
+}
+
+.skeleton-line:first-child {
+  width: 45%;
+  height: var(--space-6);
+}
+
+.skeleton-line:nth-child(odd) {
+  width: 85%;
+}
+
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}

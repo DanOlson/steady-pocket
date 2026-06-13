@@ -167,7 +167,8 @@ during the transition since they share routes and the API client.
 hardcoded colors, every screen comfortable one-handed on a 375px viewport in
 both schemes.
 
-## Phase 4 — Polish
+## Phase 4 — Polish ✅ (done 2026-06-12; known gap: Sheet doesn't trap
+focus — fine for this app's size, revisit if forms ever move into sheets)
 
 - Loading skeletons (every screen currently flashes empty while fetching) and
   basic error states — `api-client.js` does no error handling today.

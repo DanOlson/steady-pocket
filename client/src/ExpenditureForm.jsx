@@ -23,6 +23,7 @@ export default function ExpenditureForm (props) {
 
   const [expenditure, setExpenditure] = useState({ vendor, amount, description })
   const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const [saveFailed, setSaveFailed] = useState(false)
   const navigate = useNavigate()
 
   function handleSubmit (e) {
@@ -30,6 +31,7 @@ export default function ExpenditureForm (props) {
     if (expenditure.vendor && expenditure.amount && expenditure.description) {
       onSubmit(expenditure)
         .then(() => navigate(`/budgets/${budgetId}`))
+        .catch(() => setSaveFailed(true))
     }
   }
 
@@ -64,6 +66,9 @@ export default function ExpenditureForm (props) {
           defaultValue={vendor}
           onChange={e => setExpenditure({ ...expenditure, vendor: e.target.value })}
         />
+        {saveFailed && (
+          <p className="form-error" role="alert">Couldn't save. Check the server, then try again.</p>
+        )}
         <div className="form-actions">
           <Button variant="primary" className="ui-btn-block" type="submit">Save expense</Button>
           <Button variant="quiet" className="ui-btn-block" to={`/budgets/${budgetId}`}>Cancel</Button>

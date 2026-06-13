@@ -8,12 +8,14 @@ import { TextField, MoneyField } from './components/Field'
 
 export default function ExpenseCategoryForm ({ budgetId, headingText, name, amount, onSubmit }) {
   const [category, setCategory] = useState({ name, amount, budgetId })
+  const [saveFailed, setSaveFailed] = useState(false)
   const navigate = useNavigate()
 
   function handleSubmit (e) {
     e.preventDefault()
     onSubmit(category)
       .then(() => navigate(`/budgets/${budgetId}`))
+      .catch(() => setSaveFailed(true))
   }
 
   return (
@@ -32,6 +34,9 @@ export default function ExpenseCategoryForm ({ budgetId, headingText, name, amou
           defaultCents={amount}
           onChange={cents => setCategory({ ...category, amount: cents })}
         />
+        {saveFailed && (
+          <p className="form-error" role="alert">Couldn't save. Check the server, then try again.</p>
+        )}
         <div className="form-actions">
           <Button variant="primary" className="ui-btn-block" type="submit">Save category</Button>
           <Button variant="quiet" className="ui-btn-block" to={`/budgets/${budgetId}`}>Cancel</Button>

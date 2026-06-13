@@ -25,6 +25,11 @@
   left: 0;
   background: var(--color-spend-ok);
   transition: width 600ms ease;
+  animation: budget-meter-fill-in 600ms ease;
+}
+
+@keyframes budget-meter-fill-in {
+  from { width: 0; }
 }
 
 .budget-meter.is-warn .budget-meter-fill {

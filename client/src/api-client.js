@@ -1,108 +1,94 @@
 export default createClient()
 
+function request (url, options) {
+  return fetch(url, options)
+    .then(resp => {
+      if (!resp.ok) {
+        throw new Error(`${options?.method || 'GET'} ${url} failed: ${resp.status}`)
+      }
+      return resp
+    })
+}
+
+function requestJson (url, options) {
+  return request(url, options).then(resp => resp.json())
+}
+
+function jsonBody (method, body) {
+  return {
+    method,
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(body)
+  }
+}
+
 function createClient () {
   return {
     createExpenditure (expenditure) {
-      console.log(JSON.stringify(expenditure))
-      const body = {
+      return requestJson('/api/v1/expenditures', jsonBody('POST', {
         amount: expenditure.amount,
         vendor: expenditure.vendor,
         description: expenditure.description,
         budget_id: expenditure.budgetId,
         expense_category_id: expenditure.expenseCategoryId
-      }
-      return fetch(`/api/v1/expenditures`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(body)
-      })
-        .then(resp => resp.json())
+      }))
     },
 
     getExpenditure (expenditureId) {
-      return fetch(`/api/v1/expenditures/${expenditureId}`)
-        .then(resp => resp.json())
+      return requestJson(`/api/v1/expenditures/${expenditureId}`)
     },
 
     updateExpenditure (expenditure) {
-      return fetch(`/api/v1/expenditures/${expenditure.id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          expenditure: {
-            vendor: expenditure.vendor,
-            amount: expenditure.amount,
-            description: expenditure.description,
-            expense_category_id: expenditure.expenseCategoryId
-          }
-        })
-      })
+      return request(`/api/v1/expenditures/${expenditure.id}`, jsonBody('PATCH', {
+        expenditure: {
+          vendor: expenditure.vendor,
+          amount: expenditure.amount,
+          description: expenditure.description,
+          expense_category_id: expenditure.expenseCategoryId
+        }
+      }))
     },
 
     deleteExpenditure (expenditureId) {
-      return fetch(`/api/v1/expenditures/${expenditureId}`, {
-        method: 'DELETE',
-      })
+      return request(`/api/v1/expenditures/${expenditureId}`, { method: 'DELETE' })
     },
 
     createCategory (category) {
-      console.log(JSON.stringify(category))
-      return fetch(`/api/v1/expense_categories`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          category: {
-            name: category.name,
-            amount: category.amount,
-            budget_id: category.budgetId
-          }
-        })
-      })
-        .then(resp => resp.json())
+      return requestJson('/api/v1/expense_categories', jsonBody('POST', {
+        category: {
+          name: category.name,
+          amount: category.amount,
+          budget_id: category.budgetId
+        }
+      }))
     },
 
     updateCategory (category) {
-      return fetch(`/api/v1/expense_categories/${category.id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          category: {
-            name: category.name,
-            amount: category.amount,
-            budget_id: category.budgetId
-          }
-        })
-      })
+      return request(`/api/v1/expense_categories/${category.id}`, jsonBody('PATCH', {
+        category: {
+          name: category.name,
+          amount: category.amount,
+          budget_id: category.budgetId
+        }
+      }))
     },
 
     deleteCategory (categoryId) {
-      return fetch(`/api/v1/expense_categories/${categoryId}`, {
-        method: 'DELETE'
-      })
+      return request(`/api/v1/expense_categories/${categoryId}`, { method: 'DELETE' })
     },
 
     getCategory (categoryId) {
-      return fetch(`/api/v1/expense_categories/${categoryId}`)
-        .then(resp => resp.json())
+      return requestJson(`/api/v1/expense_categories/${categoryId}`)
     },
 
     getBudget (budgetId) {
-      return fetch(`/api/v1/budgets/${budgetId}`)
-        .then(resp => resp.json())
+      return requestJson(`/api/v1/budgets/${budgetId}`)
     },
 
     getBudgets () {
-      return fetch("/api/v1/budgets")
-        .then(resp => resp.json())
+      return requestJson('/api/v1/budgets')
     }
   }
 }
-

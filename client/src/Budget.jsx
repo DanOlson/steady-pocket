@@ -5,6 +5,8 @@ import BudgetMeter from './components/BudgetMeter'
 import Button from './components/Button'
 import Card from './components/Card'
 import EmptyState from './components/EmptyState'
+import ErrorState from './components/ErrorState'
+import Skeleton from './components/Skeleton'
 import { SelectField } from './components/Field'
 import apiClient from './api-client'
 import { formatCurrency } from './format'
@@ -15,6 +17,7 @@ export default function Budget () {
   const [categories, setCategories] = useState([])
   const [expenditures, setExpenditures] = useState([])
   const [summary, setSummary] = useState(null)
+  const [status, setStatus] = useState('loading')
   const { id } = useParams()
 
   useEffect(fetchBudget, [id])
@@ -26,7 +29,9 @@ export default function Budget () {
         setCategories(json.categories)
         setExpenditures(json.expenditures || [])
         setSummary(json.summary)
+        setStatus('ready')
       })
+      .catch(() => setStatus('error'))
   }
 
   // All amounts in cents, as the API returns them
@@ -50,7 +55,25 @@ export default function Budget () {
     apiClient.updateExpenditure({
       id: expenditure.id,
       expenseCategoryId: Number(categoryId)
-    }).then(fetchBudget)
+    })
+      .then(fetchBudget)
+      .catch(() => setStatus('error'))
+  }
+
+  if (status === 'error') {
+    return (
+      <AppShell>
+        <ErrorState onRetry={fetchBudget} />
+      </AppShell>
+    )
+  }
+
+  if (status === 'loading') {
+    return (
+      <AppShell>
+        <Skeleton lines={6} />
+      </AppShell>
+    )
   }
 
   return budget && (

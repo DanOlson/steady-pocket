@@ -5,6 +5,7 @@ import App from './App'
 
 beforeEach(() => {
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+    ok: true,
     json: () => Promise.resolve({ budgets: [] })
   }))
 })
