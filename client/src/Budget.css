@@ -9,28 +9,6 @@
   font-size: var(--text-sm);
 }
 
-.budget-section {
-  margin-top: var(--space-6);
-}
-
-.budget-section-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  padding-bottom: var(--space-2);
-  margin-bottom: var(--space-2);
-  border-bottom: 2px solid var(--color-text);
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  font-weight: 600;
-  letter-spacing: var(--tracking-wide);
-  text-transform: uppercase;
-}
-
-.budget-section-count {
-  font-variant-numeric: tabular-nums;
-}
-
 .filing-card {
   margin-bottom: var(--space-3);
 }

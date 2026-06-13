@@ -141,7 +141,7 @@ status conveyed by more than color (icon/text, not just red vs green),
 **Exit criteria:** component gallery page showing everything in both schemes on
 a phone-width viewport; Bootstrap reset shim deleted; d3 dependencies removed.
 
-## Phase 3 — Screen-by-screen rebuild
+## Phase 3 — Screen-by-screen rebuild ✅ (done 2026-06-12)
 
 Recompose each route from the library. Order chosen so the highest-traffic
 screens land first:

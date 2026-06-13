@@ -69,10 +69,10 @@ export default function Budget () {
       <BudgetMeter hero spent={totalSpend} budgeted={totalBudgeted} label="Total spent" />
 
       {uncategorized.length > 0 && (
-        <section className="budget-section">
-          <div className="budget-section-head">
+        <section className="screen-section">
+          <div className="screen-section-head">
             <span>Needs filing</span>
-            <span className="budget-section-count">{uncategorized.length}</span>
+            <span className="screen-section-count">{uncategorized.length}</span>
           </div>
           {uncategorized.map(expenditure => (
             <Card className="filing-card" key={expenditure.id}>
@@ -96,8 +96,8 @@ export default function Budget () {
         </section>
       )}
 
-      <section className="budget-section">
-        <div className="budget-section-head">
+      <section className="screen-section">
+        <div className="screen-section-head">
           <span>Categories</span>
           <span>{today.toLocaleString('en-US', { month: 'long' })}</span>
         </div>

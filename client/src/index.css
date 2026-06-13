@@ -1,14 +1,4 @@
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  grid-gap: var(--space-4);
-}
-
 .content {
   max-width: var(--content-max-wide);
   margin: auto;
-}
-
-.btn {
-  margin-right: var(--space-1);
 }

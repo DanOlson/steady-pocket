@@ -19,7 +19,7 @@ function App() {
             </ul>
           </nav>
         </header>
-        <div className="content container">
+        <div className="content">
           <Routes />
         </div>
       </div>

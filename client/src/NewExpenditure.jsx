@@ -35,6 +35,7 @@ export default function NewExpenditure () {
 
   return (
     <ExpenditureForm
+      heading="Record expense"
       budgetId={budgetId}
       category={category}
       onSubmit={handleSubmit}

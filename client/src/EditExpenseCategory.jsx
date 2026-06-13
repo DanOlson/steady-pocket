@@ -20,8 +20,8 @@ export default function EditExpenseCategory () {
     category && <ExpenseCategoryForm
       budgetId={budgetId}
       name={category.name}
-      amount={category.amount / 100.0}
-      headingText={`Edit Category`}
+      amount={category.amount}
+      headingText="Edit category"
       onSubmit={handleSubmit}
     />
   )

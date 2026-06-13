@@ -1,8 +1,13 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import BudgetLink from './BudgetLink'
-import ExpenseCategory from './ExpenseCategory'
-import './Expenditure.css'
+import AppShell from './components/AppShell'
+import BudgetMeter from './components/BudgetMeter'
+import Button from './components/Button'
+import Sheet from './components/Sheet'
+import { TextField, MoneyField } from './components/Field'
+
+// Shared by the new/edit expense screens. `amount` is in cents. Pass
+// onDelete to offer deletion (edit screen) behind a confirmation sheet.
 
 export default function ExpenditureForm (props) {
   const {
@@ -11,10 +16,13 @@ export default function ExpenditureForm (props) {
     vendor,
     amount,
     description,
-    onSubmit
+    heading,
+    onSubmit,
+    onDelete
   } = props
 
   const [expenditure, setExpenditure] = useState({ vendor, amount, description })
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
   const navigate = useNavigate()
 
   function handleSubmit (e) {
@@ -25,70 +33,68 @@ export default function ExpenditureForm (props) {
     }
   }
 
-  function setAmount(e) {
-    const amount = e.target.value
-    setExpenditure({ ...expenditure, amount: Math.round(amount * 100) })
-  }
-
-  function setDescription(e) {
-    const description = e.target.value
-    setExpenditure({ ...expenditure, description })
-  }
-
-  function setVendor(e) {
-    const vendor = e.target.value
-    setExpenditure({ ...expenditure, vendor })
-  }
-
   return (
-    <div className="new-expenditure">
+    <AppShell>
+      <h1 className="screen-title">{heading}</h1>
       {category && category.id && (
-        <ExpenseCategory
-          categoryName={category.name}
-          amount={category.amount}
-          totalSpend={category.total_spend_to_date}
-        />
+        <div className="form-context">
+          <BudgetMeter
+            label={category.name}
+            spent={category.total_spend_to_date}
+            budgeted={category.amount}
+          />
+        </div>
       )}
-      <form className="new-expenditure-form" onSubmit={handleSubmit}>
-        <div className="form-group row">
-          <label className="col-form-label col-sm-2">Description</label>
-          <input
-            className="form-control col-sm-10"
-            type="text"
-            name="description"
-            onChange={setDescription}
-            defaultValue={expenditure.description}>
-          </input>
-        </div>
-
-        <div className="form-group row">
-          <label className="col-form-label col-sm-2">Vendor</label>
-          <input
-            className="form-control col-sm-10"
-            type="text"
-            name="vendor"
-            onChange={setVendor}
-            defaultValue={expenditure.vendor}>
-          </input>
-        </div>
-
-        <div className="form-group row">
-          <label className="col-form-label col-sm-2">Amount</label>
-          <input
-            className="form-control col-sm-10"
-            type="number"
-            step="any"
-            name="amount"
-            onChange={setAmount}
-            defaultValue={expenditure.amount}>
-          </input>
-        </div>
-
-        <div className="form-group row">
-          <button className="btn btn-primary offset-sm-2" type="submit">Submit</button>
-          <BudgetLink className="btn btn-outline-secondary" budgetId={budgetId}>Cancel</BudgetLink>
+      <form onSubmit={handleSubmit}>
+        <MoneyField
+          label="Amount"
+          name="amount"
+          defaultCents={amount}
+          onChange={cents => setExpenditure({ ...expenditure, amount: cents })}
+        />
+        <TextField
+          label="Description"
+          name="description"
+          defaultValue={description}
+          onChange={e => setExpenditure({ ...expenditure, description: e.target.value })}
+        />
+        <TextField
+          label="Vendor"
+          name="vendor"
+          defaultValue={vendor}
+          onChange={e => setExpenditure({ ...expenditure, vendor: e.target.value })}
+        />
+        <div className="form-actions">
+          <Button variant="primary" className="ui-btn-block" type="submit">Save expense</Button>
+          <Button variant="quiet" className="ui-btn-block" to={`/budgets/${budgetId}`}>Cancel</Button>
+          {onDelete && (
+            <Button
+              variant="destructive"
+              className="ui-btn-block"
+              onClick={() => setConfirmingDelete(true)}
+            >
+              Delete expense
+            </Button>
+          )}
         </div>
       </form>
-    </div>
+      {onDelete && (
+        <Sheet
+          open={confirmingDelete}
+          title="Delete expense"
+          onClose={() => setConfirmingDelete(false)}
+        >
+          <p>This removes the expense and its amount from the budget.</p>
+          <div className="form-actions">
+            <Button variant="destructive" className="ui-btn-block" onClick={onDelete}>
+              Delete expense
+            </Button>
+            <Button variant="quiet" className="ui-btn-block" onClick={() => setConfirmingDelete(false)}>
+              Keep it
+            </Button>
+          </div>
+        </Sheet>
+      )}
+    </AppShell>
   )
 }

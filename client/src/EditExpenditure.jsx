@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import ExpenditureForm from './ExpenditureForm'
 import apiClient from './api-client'
 
@@ -7,23 +7,17 @@ export default function EditExpenditure () {
   const [expenditure, setExpenditure] = useState(null)
   const [category, setCategory] = useState(null)
   const { budgetId, id } = useParams()
+  const navigate = useNavigate()
 
   useEffect(() => {
     apiClient.getExpenditure(id)
       .then(resp => {
         setExpenditure(resp.expenditure)
-        return resp.expenditure
-      })
-      .then(expenditure => {
-        if (expenditure.category_id) {
-          return apiClient.getCategory(expenditure.category_id)
-            .then(resp => setCategory(resp.category))
+        // Uncategorized expenses have no category to show context for
+        if (resp.expenditure.category_id) {
+          apiClient.getCategory(resp.expenditure.category_id)
+            .then(catResp => setCategory(catResp.category))
         }
-        setCategory({
-          name: 'Uncategorized',
-          amount: 0,
-          total_spend_to_date: 0
-        })
       })
   }, [id])
 
@@ -31,16 +25,21 @@ export default function EditExpenditure () {
     return apiClient.updateExpenditure({ ...updated, id: expenditure.id })
   }
 
-  return category && (
-    <div className="edit-expenditure">
-      <ExpenditureForm
-        budgetId={budgetId}
-        category={category}
-        amount={Math.round(expenditure.amount / 100.0)}
-        vendor={expenditure.vendor}
-        description={expenditure.description}
-        onSubmit={handleSubmit}
-      />
-    </div>
+  function handleDelete () {
+    apiClient.deleteExpenditure(expenditure.id)
+      .then(() => navigate(`/budgets/${budgetId}`))
+  }
+
+  return expenditure && (
+    <ExpenditureForm
+      heading="Edit expense"
+      budgetId={budgetId}
+      category={category}
+      amount={expenditure.amount}
+      vendor={expenditure.vendor}
+      description={expenditure.description}
+      onSubmit={handleSubmit}
+      onDelete={handleDelete}
+    />
   )
 }
