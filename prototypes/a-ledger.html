@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<!--
+  Steady Pocket — UI refresh prototype A: "Ledger"  (throwaway, Review 1)
+
+  Direction: check-register / household ledger vernacular. Green ink on paper
+  for healthy spending, red ink when a category is "in the red". Figures set
+  in a mono face with tabular numerals, right-aligned like a register.
+
+  Spend indicator: a ruled horizontal bar. Signature element: the PACE TICK —
+  a marker on every bar showing where spending *should* be today (day 12 of
+  30), so the bar reads pace, not just fill.
+
+  Open directly in a browser. Follows the OS color scheme; use the toggle
+  (top right) to compare light/dark. Fonts load from Google Fonts — the real
+  implementation would self-host.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Steady Pocket — Prototype A: Ledger</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    color-scheme: light dark;
+
+    --color-bg: #FBFBF7;
+    --color-surface: #FFFFFF;
+    --color-ink: #1C211C;
+    --color-muted: #67705F;
+    --color-rule: #DDE0D4;
+    --color-rule-strong: #B9BFAC;
+    --color-green: #1E6E50;
+    --color-green-soft: #E2F0E8;
+    --color-warn: #8F5B00;
+    --color-warn-soft: #F4E8CE;
+    --color-red: #B3261E;
+    --color-red-soft: #F9E4E2;
+    --color-button-text: #FFFFFF;
+    --color-focus: #1E6E50;
+
+    --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+    --font-sans: "IBM Plex Sans", system-ui, sans-serif;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --color-bg: #121613;
+      --color-surface: #1A201B;
+      --color-ink: #E9EDE5;
+      --color-muted: #99A391;
+      --color-rule: #2B332B;
+      --color-rule-strong: #46523F;
+      --color-green: #66CB9C;
+      --color-green-soft: #1E3A2D;
+      --color-warn: #E5B05A;
+      --color-warn-soft: #3C2D14;
+      --color-red: #FF867D;
+      --color-red-soft: #46221F;
+      --color-button-text: #0F1410;
+      --color-focus: #66CB9C;
+    }
+  }
+  :root[data-theme="dark"] {
+    --color-bg: #121613;
+    --color-surface: #1A201B;
+    --color-ink: #E9EDE5;
+    --color-muted: #99A391;
+    --color-rule: #2B332B;
+    --color-rule-strong: #46523F;
+    --color-green: #66CB9C;
+    --color-green-soft: #1E3A2D;
+    --color-warn: #E5B05A;
+    --color-warn-soft: #3C2D14;
+    --color-red: #FF867D;
+    --color-red-soft: #46221F;
+    --color-button-text: #0F1410;
+    --color-focus: #66CB9C;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--color-bg);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: 430px;
+    margin: 0 auto;
+    padding: 0 20px 120px;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+
+  .figure {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  /* Top bar */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 0 6px;
+  }
+  .wordmark {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-green);
+  }
+  .theme-toggle {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+    background: none;
+    border: 1px solid var(--color-rule-strong);
+    border-radius: 4px;
+    padding: 6px 10px;
+    cursor: pointer;
+    min-height: 32px;
+  }
+
+  /* Header + hero */
+  header h1 {
+    font-size: 28px;
+    font-weight: 600;
+    margin: 18px 0 2px;
+  }
+  .period {
+    margin: 0 0 28px;
+    color: var(--color-muted);
+    font-size: 14px;
+  }
+
+  .hero .figure-lg {
+    font-size: 44px;
+    font-weight: 600;
+    line-height: 1.1;
+  }
+  .hero .of {
+    color: var(--color-muted);
+    font-size: 15px;
+    margin: 2px 0 16px;
+  }
+  .pace-note {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-top: 10px;
+    font-size: 13px;
+    color: var(--color-muted);
+  }
+  .pace-key {
+    display: inline-block;
+    width: 2px;
+    height: 11px;
+    background: var(--color-ink);
+    transform: translateY(1px);
+  }
+
+  /* The meter: a ruled ledger bar with a pace tick */
+  .meter {
+    position: relative;
+    height: 14px;
+    border-bottom: 1px solid var(--color-rule-strong);
+  }
+  .meter-track {
+    position: absolute;
+    inset: 0;
+    background:
+      repeating-linear-gradient(to right,
+        transparent, transparent calc(25% - 1px),
+        var(--color-rule) calc(25% - 1px), var(--color-rule) 25%);
+  }
+  .meter-fill {
+    position: absolute;
+    top: 3px;
+    bottom: 3px;
+    left: 0;
+    width: 0;
+    background: var(--color-green);
+    transition: width 600ms ease;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .meter-fill { transition: none; }
+  }
+  .meter.is-warn .meter-fill { background: var(--color-warn); }
+  .meter.is-over .meter-fill { background: var(--color-red); }
+  .meter-pace {
+    position: absolute;
+    top: -4px;
+    bottom: -4px;
+    width: 2px;
+    background: var(--color-ink);
+  }
+
+  .hero .meter { height: 20px; margin-top: 4px; }
+  .hero .meter-fill { top: 4px; bottom: 4px; }
+
+  /* Sections */
+  section { margin-top: 36px; }
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    border-bottom: 2px solid var(--color-ink);
+    padding-bottom: 6px;
+    margin-bottom: 4px;
+  }
+  .section-head .eyebrow { color: var(--color-ink); }
+
+  /* Uncategorized filing */
+  .filing {
+    border: 1px solid var(--color-rule-strong);
+    border-radius: 6px;
+    background: var(--color-surface);
+    padding: 14px 16px;
+    margin-top: 12px;
+  }
+  .filing-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: baseline;
+  }
+  .filing-row .figure { font-weight: 600; font-size: 17px; }
+  .filing-desc { color: var(--color-muted); font-size: 14px; text-align: right; }
+  .filing-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .filing select {
+    flex: 1;
+    font-family: var(--font-sans);
+    font-size: 15px;
+    color: var(--color-ink);
+    background: var(--color-bg);
+    border: 1px solid var(--color-rule-strong);
+    border-radius: 4px;
+    padding: 10px;
+    min-height: 44px;
+  }
+  .filing .file-btn {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-green);
+    background: none;
+    border: 1px solid var(--color-green);
+    border-radius: 4px;
+    padding: 0 16px;
+    min-height: 44px;
+    cursor: pointer;
+  }
+
+  /* Category register rows */
+  .category {
+    display: block;
+    padding: 16px 0 18px;
+    border-bottom: 1px solid var(--color-rule);
+    text-decoration: none;
+    color: inherit;
+  }
+  .category-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+  .category-name {
+    font-size: 16px;
+    font-weight: 500;
+  }
+  .category-figures {
+    font-size: 14px;
+    color: var(--color-muted);
+  }
+  .category-figures .spent {
+    color: var(--color-ink);
+    font-weight: 600;
+    font-size: 16px;
+  }
+  .category.is-over .category-figures .spent { color: var(--color-red); }
+
+  /* The rubber stamp for overdrawn categories */
+  .stamp {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-red);
+    border: 1.5px solid var(--color-red);
+    border-radius: 3px;
+    padding: 2px 6px;
+    transform: rotate(-2deg);
+    margin-left: 8px;
+  }
+  .badge-warn {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-warn);
+    margin-left: 8px;
+  }
+
+  .add-category {
+    display: block;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+    text-decoration: none;
+    padding: 18px 0;
+  }
+
+  /* Bottom action */
+  .action-bar {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    padding: 12px 20px calc(12px + env(safe-area-inset-bottom));
+    background: linear-gradient(to top, var(--color-bg) 70%, transparent);
+  }
+  .action-bar .inner { max-width: 430px; margin: 0 auto; }
+  .record-btn {
+    display: block;
+    width: 100%;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-button-text);
+    background: var(--color-green);
+    border: none;
+    border-radius: 6px;
+    min-height: 52px;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="topbar">
+    <span class="wordmark">Steady Pocket</span>
+    <button class="theme-toggle" id="themeToggle" aria-label="Color scheme">auto</button>
+  </div>
+
+  <header>
+    <h1>Household</h1>
+    <p class="period">June 2026 · Day 12 of 30</p>
+  </header>
+
+  <div class="hero">
+    <span class="eyebrow">Total spent</span>
+    <div class="figure figure-lg">$912.20</div>
+    <p class="of">of <span class="figure">$1,800.00</span> budgeted</p>
+    <div class="meter" data-spent="912.20" data-budget="1800">
+      <div class="meter-track"></div>
+      <div class="meter-fill"></div>
+      <div class="meter-pace" style="left: 40%"></div>
+    </div>
+    <p class="pace-note"><span class="pace-key"></span> Today — 51% spent, 40% of the month gone</p>
+  </div>
+
+  <section>
+    <div class="section-head">
+      <span class="eyebrow">Needs filing</span>
+      <span class="eyebrow figure">1</span>
+    </div>
+    <div class="filing">
+      <div class="filing-row">
+        <span class="figure">$86.20</span>
+        <span class="filing-desc">Costco · Bulk groceries</span>
+      </div>
+      <div class="filing-actions">
+        <select aria-label="Category for this expense">
+          <option>Choose a category</option>
+          <option>Groceries</option>
+          <option>Dining out</option>
+          <option>Gas &amp; auto</option>
+          <option>Utilities</option>
+          <option>Kids</option>
+          <option>Fun money</option>
+        </select>
+        <button class="file-btn">File</button>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <span class="eyebrow">Categories</span>
+      <span class="eyebrow">June</span>
+    </div>
+
+    <a class="category" href="#" data-meter>
+      <div class="category-line">
+        <span class="category-name">Groceries</span>
+        <span class="category-figures"><span class="figure spent">$287.00</span> / <span class="figure">$620</span></span>
+      </div>
+      <div class="meter" data-spent="287" data-budget="620">
+        <div class="meter-track"></div>
+        <div class="meter-fill"></div>
+        <div class="meter-pace" style="left: 40%"></div>
+      </div>
+    </a>
+
+    <a class="category is-over" href="#" data-meter>
+      <div class="category-line">
+        <span class="category-name">Dining out<span class="stamp">Over +$21.00</span></span>
+        <span class="category-figures"><span class="figure spent">$171.00</span> / <span class="figure">$150</span></span>
+      </div>
+      <div class="meter" data-spent="171" data-budget="150">
+        <div class="meter-track"></div>
+        <div class="meter-fill"></div>
+        <div class="meter-pace" style="left: 40%"></div>
+      </div>
+    </a>
+
+    <a class="category" href="#" data-meter>
+      <div class="category-line">
+        <span class="category-name">Utilities</span>
+        <span class="category-figures"><span class="figure spent">$104.00</span> / <span class="figure">$380</span></span>
+      </div>
+      <div class="meter" data-spent="104" data-budget="380">
+        <div class="meter-track"></div>
+        <div class="meter-fill"></div>
+        <div class="meter-pace" style="left: 40%"></div>
+      </div>
+    </a>
+
+    <a class="category" href="#" data-meter>
+      <div class="category-line">
+        <span class="category-name">Gas &amp; auto</span>
+        <span class="category-figures"><span class="figure spent">$88.00</span> / <span class="figure">$300</span></span>
+      </div>
+      <div class="meter" data-spent="88" data-budget="300">
+        <div class="meter-track"></div>
+        <div class="meter-fill"></div>
+        <div class="meter-pace" style="left: 40%"></div>
+      </div>
+    </a>
+
+    <a class="category" href="#" data-meter>
+      <div class="category-line">
+        <span class="category-name">Kids</span>
+        <span class="category-figures"><span class="figure spent">$45.00</span> / <span class="figure">$200</span></span>
+      </div>
+      <div class="meter" data-spent="45" data-budget="200">
+        <div class="meter-track"></div>
+        <div class="meter-fill"></div>
+        <div class="meter-pace" style="left: 40%"></div>
+      </div>
+    </a>
+
+    <a class="category" href="#" data-meter>
+      <div class="category-line">
+        <span class="category-name">Fun money<span class="badge-warn">Close</span></span>
+        <span class="category-figures"><span class="figure spent">$131.00</span> / <span class="figure">$150</span></span>
+      </div>
+      <div class="meter" data-spent="131" data-budget="150">
+        <div class="meter-track"></div>
+        <div class="meter-fill"></div>
+        <div class="meter-pace" style="left: 40%"></div>
+      </div>
+    </a>
+
+    <a class="add-category" href="#">+ Add a category</a>
+  </section>
+</div>
+
+<div class="action-bar">
+  <div class="inner">
+    <button class="record-btn">+ Record expense</button>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll('.meter').forEach(meter => {
+    const spent = Number(meter.dataset.spent)
+    const budget = Number(meter.dataset.budget)
+    const frac = budget > 0 ? spent / budget : 0
+    meter.querySelector('.meter-fill').style.width = Math.min(frac, 1) * 100 + '%'
+    meter.classList.add(frac > 1 ? 'is-over' : frac >= 0.85 ? 'is-warn' : 'is-ok')
+  })
+
+  const toggle = document.getElementById('themeToggle')
+  const modes = ['auto', 'light', 'dark']
+  let mode = 0
+  toggle.addEventListener('click', () => {
+    mode = (mode + 1) % modes.length
+    const value = modes[mode]
+    toggle.textContent = value
+    if (value === 'auto') {
+      document.documentElement.removeAttribute('data-theme')
+    } else {
+      document.documentElement.setAttribute('data-theme', value)
+    }
+  })
+</script>
+</body>
+</html>

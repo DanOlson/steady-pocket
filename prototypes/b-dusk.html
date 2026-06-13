@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<!--
+  Steady Pocket — UI refresh prototype B: "Dusk"  (throwaway, Review 1)
+
+  Direction: soft indigo evolved from the app's existing #4834d4 brand purple.
+  Rounded surfaces, generous radii, calm dusk palette — dark mode is the
+  native mood, light mode is a lavender-tinted day version.
+
+  Spend indicator: radial rings. Signature element: the SECOND LAP — when a
+  category exceeds its budget, the ring completes and a coral arc draws a
+  second lap around the outside, so overspend has visible magnitude instead
+  of being clamped.
+
+  Open directly in a browser. Follows the OS color scheme; use the toggle
+  (top right) to compare light/dark. Fonts load from Google Fonts — the real
+  implementation would self-host.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Steady Pocket — Prototype B: Dusk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    color-scheme: light dark;
+
+    --color-bg: #F4F3FB;
+    --color-surface: #FFFFFF;
+    --color-surface-tint: #ECEAF9;
+    --color-text: #232140;
+    --color-muted: #75719B;
+    --color-accent: #4834D4;
+    --color-on-accent: #FFFFFF;
+    --color-track: #E4E1F5;
+    --color-ok: #4834D4;
+    --color-warn: #C77700;
+    --color-over: #E14D6B;
+    --color-over-soft: #FBE4E9;
+    --color-shadow: 0 8px 24px rgba(72, 52, 212, 0.10);
+    --color-focus: #4834D4;
+
+    --font-display: "Sora", system-ui, sans-serif;
+    --font-body: "Inter", system-ui, sans-serif;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --color-bg: #131129;
+      --color-surface: #1D1A3E;
+      --color-surface-tint: #262250;
+      --color-text: #ECEAFB;
+      --color-muted: #9D98C8;
+      --color-accent: #9D8CFF;
+      --color-on-accent: #17143A;
+      --color-track: #2E2A5E;
+      --color-ok: #9D8CFF;
+      --color-warn: #FFB03A;
+      --color-over: #FF6B8A;
+      --color-over-soft: #3C1F30;
+      --color-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+      --color-focus: #9D8CFF;
+    }
+  }
+  :root[data-theme="dark"] {
+    --color-bg: #131129;
+    --color-surface: #1D1A3E;
+    --color-surface-tint: #262250;
+    --color-text: #ECEAFB;
+    --color-muted: #9D98C8;
+    --color-accent: #9D8CFF;
+    --color-on-accent: #17143A;
+    --color-track: #2E2A5E;
+    --color-ok: #9D8CFF;
+    --color-warn: #FFB03A;
+    --color-over: #FF6B8A;
+    --color-over-soft: #3C1F30;
+    --color-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    --color-focus: #9D8CFF;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--color-bg);
+    color: var(--color-text);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: 430px;
+    margin: 0 auto;
+    padding: 0 18px 120px;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+
+  .num {
+    font-family: var(--font-display);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Top bar */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 2px 8px;
+  }
+  .wordmark {
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--color-accent);
+  }
+  .theme-toggle {
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--color-muted);
+    background: var(--color-surface);
+    border: none;
+    border-radius: 999px;
+    padding: 8px 14px;
+    min-height: 32px;
+    cursor: pointer;
+    box-shadow: var(--color-shadow);
+  }
+
+  header h1 {
+    font-family: var(--font-display);
+    font-size: 24px;
+    font-weight: 600;
+    margin: 14px 2px 0;
+  }
+  .period {
+    margin: 2px 2px 20px;
+    color: var(--color-muted);
+    font-size: 14px;
+  }
+
+  /* Hero card with the big ring */
+  .hero {
+    background: var(--color-surface);
+    border-radius: 24px;
+    box-shadow: var(--color-shadow);
+    padding: 28px 20px 24px;
+    text-align: center;
+  }
+  .ring {
+    position: relative;
+    display: inline-block;
+  }
+  .ring svg { display: block; }
+  .ring-track { stroke: var(--color-track); }
+  .ring-progress {
+    stroke: var(--color-ok);
+    transition: stroke-dasharray 700ms ease;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ring-progress, .ring-lap { transition: none; }
+  }
+  .ring.is-warn .ring-progress { stroke: var(--color-warn); }
+  .ring.is-over .ring-progress { stroke: var(--color-over); }
+  .ring-lap {
+    stroke: var(--color-over);
+    transition: stroke-dasharray 700ms ease 300ms;
+  }
+  .ring-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .hero .ring-center .num {
+    font-size: 34px;
+    font-weight: 700;
+    line-height: 1.1;
+  }
+  .hero .ring-center .sub {
+    font-size: 13px;
+    color: var(--color-muted);
+  }
+  .hero-caption {
+    margin: 16px 0 0;
+    font-size: 14px;
+    color: var(--color-muted);
+  }
+  .hero-caption strong { color: var(--color-text); font-weight: 600; }
+
+  /* Sections */
+  section { margin-top: 26px; }
+  h2 {
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 600;
+    margin: 0 2px 10px;
+  }
+  h2 .count {
+    color: var(--color-muted);
+    font-weight: 500;
+  }
+
+  /* Uncategorized card */
+  .sort-card {
+    background: var(--color-surface-tint);
+    border-radius: 20px;
+    padding: 16px;
+  }
+  .sort-card .lede {
+    margin: 0 0 12px;
+    font-size: 14px;
+    color: var(--color-muted);
+  }
+  .sort-row {
+    background: var(--color-surface);
+    border-radius: 14px;
+    padding: 14px;
+  }
+  .sort-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+  }
+  .sort-line .num { font-size: 17px; font-weight: 600; }
+  .sort-line .desc { font-size: 14px; color: var(--color-muted); text-align: right; }
+  .sort-actions { display: flex; gap: 8px; margin-top: 12px; }
+  .sort-actions select {
+    flex: 1;
+    font-family: var(--font-body);
+    font-size: 15px;
+    color: var(--color-text);
+    background: var(--color-bg);
+    border: none;
+    border-radius: 10px;
+    padding: 10px 12px;
+    min-height: 44px;
+  }
+  .sort-actions .save-btn {
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-on-accent);
+    background: var(--color-accent);
+    border: none;
+    border-radius: 10px;
+    padding: 0 18px;
+    min-height: 44px;
+    cursor: pointer;
+  }
+
+  /* Category cards */
+  .category {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--color-surface);
+    border-radius: 18px;
+    box-shadow: var(--color-shadow);
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    text-decoration: none;
+    color: inherit;
+    min-height: 72px;
+  }
+  .category-info { flex: 1; min-width: 0; }
+  .category-name {
+    font-size: 15px;
+    font-weight: 600;
+    margin: 0;
+  }
+  .category-figures {
+    font-size: 13px;
+    color: var(--color-muted);
+    margin: 2px 0 0;
+  }
+  .pill {
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 999px;
+    padding: 4px 10px;
+    white-space: nowrap;
+  }
+  .pill-over { color: var(--color-over); background: var(--color-over-soft); }
+  .chevron { color: var(--color-muted); font-size: 18px; }
+
+  .add-category {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 56px;
+    border: 1.5px dashed var(--color-track);
+    border-radius: 18px;
+    color: var(--color-muted);
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+  }
+
+  /* Floating action */
+  .action-bar {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    padding: 12px 18px calc(14px + env(safe-area-inset-bottom));
+    display: flex;
+    justify-content: center;
+    pointer-events: none;
+  }
+  .add-expense {
+    pointer-events: auto;
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--color-on-accent);
+    background: var(--color-accent);
+    border: none;
+    border-radius: 999px;
+    min-height: 54px;
+    padding: 0 32px;
+    cursor: pointer;
+    box-shadow: var(--color-shadow);
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="topbar">
+    <span class="wordmark">Steady Pocket</span>
+    <button class="theme-toggle" id="themeToggle" aria-label="Color scheme">auto</button>
+  </div>
+
+  <header>
+    <h1>Household</h1>
+    <p class="period">June 2026 · day 12 of 30</p>
+  </header>
+
+  <div class="hero">
+    <div class="ring" data-spent="912.20" data-budget="1800" data-size="hero">
+      <svg width="190" height="190" viewBox="0 0 190 190" aria-hidden="true">
+        <g transform="rotate(-90 95 95)">
+          <circle class="ring-track" cx="95" cy="95" r="74" fill="none" stroke-width="14"></circle>
+          <circle class="ring-progress" cx="95" cy="95" r="74" fill="none" stroke-width="14" stroke-linecap="round"></circle>
+          <circle class="ring-lap" cx="95" cy="95" r="86" fill="none" stroke-width="6" stroke-linecap="round"></circle>
+        </g>
+      </svg>
+      <div class="ring-center">
+        <span class="num">$912</span>
+        <span class="sub">of $1,800</span>
+      </div>
+    </div>
+    <p class="hero-caption"><strong>$887.80 left</strong> for the rest of June</p>
+  </div>
+
+  <section>
+    <h2>Needs a category <span class="count">· 1</span></h2>
+    <div class="sort-card">
+      <p class="lede">Pick a category to count this toward June.</p>
+      <div class="sort-row">
+        <div class="sort-line">
+          <span class="num">$86.20</span>
+          <span class="desc">Costco · Bulk groceries</span>
+        </div>
+        <div class="sort-actions">
+          <select aria-label="Category for this expense">
+            <option>Choose a category</option>
+            <option>Groceries</option>
+            <option>Dining out</option>
+            <option>Gas &amp; auto</option>
+            <option>Utilities</option>
+            <option>Kids</option>
+            <option>Fun money</option>
+          </select>
+          <button class="save-btn">Save</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Categories</h2>
+
+    <a class="category" href="#">
+      <span class="ring" data-spent="287" data-budget="620">
+        <svg width="48" height="48" viewBox="0 0 190 190" aria-hidden="true">
+          <g transform="rotate(-90 95 95)">
+            <circle class="ring-track" cx="95" cy="95" r="74" fill="none" stroke-width="22"></circle>
+            <circle class="ring-progress" cx="95" cy="95" r="74" fill="none" stroke-width="22" stroke-linecap="round"></circle>
+            <circle class="ring-lap" cx="95" cy="95" r="86" fill="none" stroke-width="10" stroke-linecap="round"></circle>
+          </g>
+        </svg>
+      </span>
+      <span class="category-info">
+        <p class="category-name">Groceries</p>
+        <p class="category-figures"><span class="num">$287</span> of $620</p>
+      </span>
+      <span class="chevron">›</span>
+    </a>
+
+    <a class="category" href="#">
+      <span class="ring" data-spent="171" data-budget="150">
+        <svg width="48" height="48" viewBox="0 0 190 190" aria-hidden="true">
+          <g transform="rotate(-90 95 95)">
+            <circle class="ring-track" cx="95" cy="95" r="74" fill="none" stroke-width="22"></circle>
+            <circle class="ring-progress" cx="95" cy="95" r="74" fill="none" stroke-width="22" stroke-linecap="round"></circle>
+            <circle class="ring-lap" cx="95" cy="95" r="86" fill="none" stroke-width="10" stroke-linecap="round"></circle>
+          </g>
+        </svg>
+      </span>
+      <span class="category-info">
+        <p class="category-name">Dining out</p>
+        <p class="category-figures"><span class="num">$171</span> of $150</p>
+      </span>
+      <span class="pill pill-over">$21 over</span>
+      <span class="chevron">›</span>
+    </a>
+
+    <a class="category" href="#">
+      <span class="ring" data-spent="104" data-budget="380">
+        <svg width="48" height="48" viewBox="0 0 190 190" aria-hidden="true">
+          <g transform="rotate(-90 95 95)">
+            <circle class="ring-track" cx="95" cy="95" r="74" fill="none" stroke-width="22"></circle>
+            <circle class="ring-progress" cx="95" cy="95" r="74" fill="none" stroke-width="22" stroke-linecap="round"></circle>
+            <circle class="ring-lap" cx="95" cy="95" r="86" fill="none" stroke-width="10" stroke-linecap="round"></circle>
+          </g>
+        </svg>
+      </span>
+      <span class="category-info">
+        <p class="category-name">Utilities</p>
+        <p class="category-figures"><span class="num">$104</span> of $380</p>
+      </span>
+      <span class="chevron">›</span>
+    </a>
+
+    <a class="category" href="#">
+      <span class="ring" data-spent="88" data-budget="300">
+        <svg width="48" height="48" viewBox="0 0 190 190" aria-hidden="true">
+          <g transform="rotate(-90 95 95)">
+            <circle class="ring-track" cx="95" cy="95" r="74" fill="none" stroke-width="22"></circle>
+            <circle class="ring-progress" cx="95" cy="95" r="74" fill="none" stroke-width="22" stroke-linecap="round"></circle>
+            <circle class="ring-lap" cx="95" cy="95" r="86" fill="none" stroke-width="10" stroke-linecap="round"></circle>
+          </g>
+        </svg>
+      </span>
+      <span class="category-info">
+        <p class="category-name">Gas &amp; auto</p>
+        <p class="category-figures"><span class="num">$88</span> of $300</p>
+      </span>
+      <span class="chevron">›</span>
+    </a>
+
+    <a class="category" href="#">
+      <span class="ring" data-spent="45" data-budget="200">
+        <svg width="48" height="48" viewBox="0 0 190 190" aria-hidden="true">
+          <g transform="rotate(-90 95 95)">
+            <circle class="ring-track" cx="95" cy="95" r="74" fill="none" stroke-width="22"></circle>
+            <circle class="ring-progress" cx="95" cy="95" r="74" fill="none" stroke-width="22" stroke-linecap="round"></circle>
+            <circle class="ring-lap" cx="95" cy="95" r="86" fill="none" stroke-width="10" stroke-linecap="round"></circle>
+          </g>
+        </svg>
+      </span>
+      <span class="category-info">
+        <p class="category-name">Kids</p>
+        <p class="category-figures"><span class="num">$45</span> of $200</p>
+      </span>
+      <span class="chevron">›</span>
+    </a>
+
+    <a class="category" href="#">
+      <span class="ring" data-spent="131" data-budget="150">
+        <svg width="48" height="48" viewBox="0 0 190 190" aria-hidden="true">
+          <g transform="rotate(-90 95 95)">
+            <circle class="ring-track" cx="95" cy="95" r="74" fill="none" stroke-width="22"></circle>
+            <circle class="ring-progress" cx="95" cy="95" r="74" fill="none" stroke-width="22" stroke-linecap="round"></circle>
+            <circle class="ring-lap" cx="95" cy="95" r="86" fill="none" stroke-width="10" stroke-linecap="round"></circle>
+          </g>
+        </svg>
+      </span>
+      <span class="category-info">
+        <p class="category-name">Fun money</p>
+        <p class="category-figures"><span class="num">$131</span> of $150</p>
+      </span>
+      <span class="chevron">›</span>
+    </a>
+
+    <a class="add-category" href="#">+ Add a category</a>
+  </section>
+</div>
+
+<div class="action-bar">
+  <button class="add-expense">+ Add expense</button>
+</div>
+
+<script>
+  document.querySelectorAll('.ring').forEach(ring => {
+    const spent = Number(ring.dataset.spent)
+    const budget = Number(ring.dataset.budget)
+    const frac = budget > 0 ? spent / budget : 0
+
+    const progress = ring.querySelector('.ring-progress')
+    const inner = 2 * Math.PI * 74
+    progress.style.strokeDasharray = `${Math.min(frac, 1) * inner} ${inner}`
+
+    const lap = ring.querySelector('.ring-lap')
+    if (frac > 1) {
+      const outer = 2 * Math.PI * 86
+      lap.style.strokeDasharray = `${Math.min(frac - 1, 1) * outer} ${outer}`
+    } else {
+      lap.remove()
+    }
+
+    ring.classList.add(frac > 1 ? 'is-over' : frac >= 0.85 ? 'is-warn' : 'is-ok')
+  })
+
+  const toggle = document.getElementById('themeToggle')
+  const modes = ['auto', 'light', 'dark']
+  let mode = 0
+  toggle.addEventListener('click', () => {
+    mode = (mode + 1) % modes.length
+    const value = modes[mode]
+    toggle.textContent = value
+    if (value === 'auto') {
+      document.documentElement.removeAttribute('data-theme')
+    } else {
+      document.documentElement.setAttribute('data-theme', value)
+    }
+  })
+</script>
+</body>
+</html>
