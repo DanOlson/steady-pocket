@@ -17,6 +17,7 @@ export default function ExpenditureForm (props) {
     amount,
     description,
     heading,
+    autoFocusAmount = false,
     onSubmit,
     onDelete
   } = props
@@ -51,6 +52,7 @@ export default function ExpenditureForm (props) {
         <MoneyField
           label="Amount"
           name="amount"
+          autoFocus={autoFocusAmount}
           defaultCents={amount}
           onChange={cents => setExpenditure({ ...expenditure, amount: cents })}
         />

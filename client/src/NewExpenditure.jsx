@@ -38,6 +38,7 @@ export default function NewExpenditure () {
       heading="Record expense"
       budgetId={budgetId}
       category={category}
+      autoFocusAmount
       onSubmit={handleSubmit}
     />
   )
